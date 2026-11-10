@@ -104,3 +104,62 @@ def test_w3c_did_and_verifiable_credentials():
     assert "proof" in vc
     assert vc["proof"]["type"] == "Ed25519Signature2020"
     assert len(vc["proof"]["jws"]) > 20
+
+
+def test_vault_runtime_injection_and_redaction():
+    from app.vault import service, redact, StreamRedactor
+    
+    # 1. Put secret
+    clean = service.put_secret("TEST_GITHUB_TOKEN", "ghp_super_secret_token_12345")
+    assert clean == "TEST_GITHUB_TOKEN"
+
+    # 2. Verify list_secrets NEVER reveals plain value
+    secrets_list = service.list_secrets()
+    found = [s for s in secrets_list if s["name"] == "TEST_GITHUB_TOKEN"]
+    assert len(found) == 1
+    assert found[0]["masked_preview"] == "••••••••"
+    assert "ghp_super_secret_token_12345" not in str(found[0])
+
+    # 3. Export env map for runtime injection
+    env_map = service.export_env_map()
+    assert "TEST_GITHUB_TOKEN" in env_map
+    assert env_map["TEST_GITHUB_TOKEN"] == "ghp_super_secret_token_12345"
+
+    # 4. Verify redaction masks secret values in logs and stdout
+    raw_log = "Error in curl https://api.github.com with token ghp_super_secret_token_12345 returned 401"
+    masked = service.redact_secrets(raw_log)
+    assert "ghp_super_secret_token_12345" not in masked
+    assert "••••" in masked
+
+    # 5. Clean up
+    deleted = service.delete_secret("TEST_GITHUB_TOKEN")
+    assert deleted is True
+
+def test_expert_brains_perspective():
+    from app.brains import service
+    
+    # 1. List pre-seeded default experts
+    brains = service.list_brains()
+    names = [b.name for b in brains]
+    assert "SecurityAuditor" in names
+    assert "DeFiSolver" in names
+    assert "JetsonArchitect" in names
+
+    # 2. Test detect_called_experts
+    prompt = "Please @SecurityAuditor inspect our board firewall"
+    detected = service.detect_called_experts(prompt)
+    assert len(detected) == 1
+    assert detected[0].name == "SecurityAuditor"
+    assert "Zero-trust" in detected[0].angle
+
+    # 3. Create custom expert
+    custom = service.create_or_update_brain(
+        name="PerformanceAnalyst",
+        angle="Latency minimization and zero-copy throughput.",
+        method="1. Benchmark pipeline.\n2. Profile hot paths.\n3. Eliminate bottleneck."
+    )
+    assert custom.name == "PerformanceAnalyst"
+    
+    # Clean up custom
+    deleted = service.delete_brain("PerformanceAnalyst")
+    assert deleted is True

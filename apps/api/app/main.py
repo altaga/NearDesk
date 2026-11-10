@@ -24,6 +24,8 @@ from app.edge.files import list_files as fs_list, read_file as fs_read, write_fi
 from app.browser.runtime import browser_runtime
 from app.jobs.manager import jobs_manager
 from app.memory.manager import memory_manager
+from app.vault.routes import router as vault_router
+from app.brains.routes import router as brains_router
 
 app = FastAPI(
     title="NearDesk Sovereign Operator API",
@@ -38,6 +40,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(vault_router)
+app.include_router(brains_router)
 
 # -------------------------------------------------------------
 # Data Models

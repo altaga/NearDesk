@@ -9,6 +9,8 @@ from app.chat.desk_tools import TOOL_DEFINITIONS, dispatch_tool
 from app.board.telemetry import telemetry_collector
 from app.near_chain.mpc import chain_signatures
 from app.near_intents.swap import near_intents
+from app.brains.service import detect_called_experts
+from app.memory.manager import memory_manager
 
 logger = logging.getLogger("neardesk.engine")
 
@@ -39,10 +41,13 @@ class ChatEngine:
 
         logger.info(f"Chat routed to [{tier}] because [{reason}]")
 
+        # Check for expert brains (@SecurityAuditor, @DeFiSolver, etc.)
+        called_brains = detect_called_experts(latest_user_msg)
+
         # ---------------------------------------------------------
         # TIER 1: Local Fast / Budget Saver
         # ---------------------------------------------------------
-        if tier == "local_fast":
+        if tier == "local_fast" and not called_brains:
             local_resp = await self._handle_local_fast(latest_user_msg)
             if local_resp:
                 return {
@@ -55,9 +60,31 @@ class ChatEngine:
                 }
 
         # ---------------------------------------------------------
+        # Assemble Sovereign Memory & Brain Perspectives
+        # ---------------------------------------------------------
+        memory_doc = memory_manager.get_memory()
+        memory_txt = memory_doc.get("content", "").strip() if memory_doc else ""
+
+        expert_context = ""
+        if called_brains:
+            for b in called_brains:
+                expert_context += (
+                    f"\n\n[ACTIVE OPERATOR PERSPECTIVE: @{b.name}]\n"
+                    f"Operational Angle: {b.angle}\n"
+                    f"Procedural Method:\n{b.method}\n"
+                    f"INSTRUCTION: You MUST speak and execute strictly from the angle and methodology of @{b.name}. Explicitly state you are applying @{b.name}'s perspective."
+                )
+
+        sys_content = SYSTEM_PROMPT
+        if memory_txt:
+            sys_content += f"\n\n--- SOVEREIGN OPERATOR MEMORY ---\n{memory_txt[:2000]}"
+        if expert_context:
+            sys_content += expert_context
+
+        # ---------------------------------------------------------
         # TIER 2: NEAR AI Cloud (Reasoning & Function Calling)
         # ---------------------------------------------------------
-        full_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        full_messages = [{"role": "system", "content": sys_content}]
         if history:
             full_messages.extend(history[-6:])  # Keep context compact to save tokens
         full_messages.extend(messages)
@@ -71,11 +98,20 @@ class ChatEngine:
         if not res["ok"]:
             # Cloud failed or budget halted -> gracefully fall back to local answer
             err_msg = res.get("error", {}).get("message", "NEAR AI Cloud error")
+            fallback_text = self._generate_fallback_response(latest_user_msg)
+            if called_brains:
+                b = called_brains[0]
+                fallback_text = (
+                    f"[Perspective: @{b.name}]\n"
+                    f"*Angle: {b.angle}*\n\n"
+                    f"{fallback_text}\n\n"
+                    f"**Methodological Steps:**\n{b.method}"
+                )
             return {
                 "ok": True,
                 "tier": "local_fallback",
                 "route_reason": f"cloud_unavailable_{err_msg[:30]}",
-                "content": f"[NearDesk Edge Operator]\n{self._generate_fallback_response(latest_user_msg)}\n\n*(Note: Cloud reasoning was skipped: {err_msg})*",
+                "content": f"[NearDesk Edge Operator]\n{fallback_text}\n\n*(Note: Cloud reasoning was skipped: {err_msg})*",
                 "tool_executions": [],
                 "budget": budget_manager.get_status()
             }

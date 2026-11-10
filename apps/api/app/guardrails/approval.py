@@ -60,6 +60,38 @@ class ApprovalManager:
         logger.info(f"GUARDRAIL: Request {request_id} was {req.status} by {resolved_by}")
 
         if approved:
+            # If this was a shell command approval, execute it with runtime injected vault secrets
+            if req.action_type == "shell_execution":
+                cmd = req.payload.get("command", "")
+                if cmd:
+                    try:
+                        import subprocess
+                        import os
+                        from app.vault.service import export_env_map, redact_secrets
+                        env = os.environ.copy()
+                        env.update(export_env_map())
+                        res = subprocess.run(
+                            cmd,
+                            shell=True,
+                            capture_output=True,
+                            text=True,
+                            timeout=30,
+                            env=env
+                        )
+                        raw_out = (res.stdout or "") + (res.stderr or "")
+                        redacted_out = redact_secrets(raw_out)[:4000]
+                        req.payload["execution_result"] = {
+                            "exit_code": res.returncode,
+                            "output": redacted_out,
+                            "executed_at": time.time()
+                        }
+                    except Exception as exc:
+                        req.payload["execution_result"] = {
+                            "exit_code": -1,
+                            "output": f"Execution error: {exc}",
+                            "executed_at": time.time()
+                        }
+
             try:
                 from app.near_chain.audit import audit_trail
                 audit_trail.record_action(

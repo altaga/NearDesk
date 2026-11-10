@@ -34,12 +34,16 @@ class HybridRouter:
         if settings.LLM_MODE == "near_cloud":
             return "near_cloud", "forced_near_cloud_mode"
 
-        # 3. Quick deterministic heuristic: if query is directly actionable locally, save tokens!
+        # 3. Explicit Expert Persona requested (@SecurityAuditor, etc.) -> Cloud Reasoning
+        if "@" in message:
+            return "near_cloud", "expert_persona_reasoning"
+
+        # 4. Quick deterministic heuristic: if query is directly actionable locally, save tokens!
         for kw in LOCAL_INTENTS:
             if kw in lower:
                 return "local_fast", f"matched_deterministic_intent_{kw}"
 
-        # 4. Complex reasoning, coding, or open queries -> NEAR AI Cloud
+        # 5. Complex reasoning, coding, or open queries -> NEAR AI Cloud
         return "near_cloud", "complex_reasoning_routed_to_near_ai"
 
 hybrid_router = HybridRouter()
