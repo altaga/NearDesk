@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  board-emu:
+    build:
+      context: ../../
+      dockerfile: apps/board-emu/Dockerfile
+    container_name: neardesk-board-emu
+    restart: unless-stopped
+    environment:
+      - NEARDESK_API_URL=http://host.docker.internal:8000
+      - NEARDESK_BOARD_ID=jetson-orin-emulator-01
+      - HEARTBEAT_INTERVAL=3
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
