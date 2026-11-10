@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, Lock, Check } from "lucide-react";
 import { fetchFencing } from "../lib/api";
 import { KeyFencingStatus } from "../lib/types";
 
@@ -19,67 +19,77 @@ export const AgentFencingCard: React.FC = () => {
   const pct = fencing?.allowance_used_pct ?? 7.2;
 
   return (
-    <div className="bg-near-surface border border-near-border rounded p-4 flex flex-col gap-3">
+    <div className="bg-[#101216] border border-[#1E222A] rounded p-4 flex flex-col gap-3">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-near-border pb-2.5">
+      <div className="flex items-center justify-between border-b border-[#1A1D24] pb-2.5">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-near-green" />
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-near-textPrimary">
-            NEAR Scoped FunctionCall Fencing
+          <ShieldCheck className="w-3.5 h-3.5 text-[#00EC97]" />
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-[#EDEDEF]">
+            Scoped FunctionCall Access Key
           </h2>
         </div>
-        <span className="text-[10px] font-mono text-near-green bg-near-green/10 border border-near-green/20 px-2 py-0.5 rounded">
-          Mathematical Boundary
+        <span className="text-[10px] font-mono text-[#7E8492]">
+          Deterministic Fence
         </span>
       </div>
 
-      <p className="text-[11px] text-near-textMuted leading-relaxed">
-        The agent operates strictly using a restricted FunctionCall Access Key. It cannot transfer arbitrary account funds or delete contracts, even under prompt injection.
+      <p className="text-[11px] text-[#7E8492] leading-relaxed">
+        Agent runs under restricted NEAR FunctionCall permissions. Fund transfers and contract deletion are mathematically barred at protocol level.
       </p>
 
-      {/* Security Guarantees Grid */}
-      <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-        <div className="bg-near-black border border-near-border rounded p-2 flex items-center gap-2">
-          <CheckCircle2 className="w-3.5 h-3.5 text-near-green shrink-0" />
-          <span className="text-near-textSecondary">Master Key Locked</span>
+      {/* Security Invariants */}
+      <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+        <div className="bg-[#090A0D] border border-[#1A1D24] rounded px-2.5 py-2 flex items-center justify-between">
+          <span className="text-[#9CA3AF]">Master Key</span>
+          <span className="text-[#00EC97] flex items-center gap-1 font-medium">
+            <Lock className="w-2.5 h-2.5" /> Isolated
+          </span>
         </div>
-        <div className="bg-near-black border border-near-border rounded p-2 flex items-center gap-2">
-          <CheckCircle2 className="w-3.5 h-3.5 text-near-green shrink-0" />
-          <span className="text-near-textSecondary">Transfer Immature Blocked</span>
+        <div className="bg-[#090A0D] border border-[#1A1D24] rounded px-2.5 py-2 flex items-center justify-between">
+          <span className="text-[#9CA3AF]">Native Transfer</span>
+          <span className="text-[#7E8492] flex items-center gap-1">
+            <Check className="w-2.5 h-2.5 text-[#00EC97]" /> Blocked
+          </span>
         </div>
       </div>
 
       {/* Gas Allowance Meter */}
-      <div className="bg-near-black border border-near-border rounded p-3 flex flex-col gap-2 mt-1">
+      <div className="bg-[#090A0D] border border-[#1A1D24] rounded p-3 flex flex-col gap-2">
         <div className="flex items-center justify-between text-[11px] font-mono">
-          <span className="text-near-textMuted">AGENT GAS ALLOWANCE</span>
-          <span className="text-near-textPrimary font-semibold">
-            {spent.toFixed(3)} / {maxAllowance.toFixed(2)} NEAR
+          <span className="text-[#7E8492] text-[10px] uppercase tracking-wider">Gas Allowance Ceiling</span>
+          <span className="text-[#EDEDEF] font-medium">
+            {spent.toFixed(3)} <span className="text-[#7E8492]">/ {maxAllowance.toFixed(2)} NEAR</span>
           </span>
         </div>
 
-        <div className="w-full bg-near-surfaceElevated h-2 rounded-full overflow-hidden border border-near-border">
+        <div
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          className="w-full bg-[#16181F] h-1.5 rounded-full overflow-hidden"
+        >
           <div
-            className="h-full bg-near-green transition-all duration-300"
+            className="h-full bg-[#00EC97] transition-all duration-300"
             style={{ width: `${Math.min(100, pct)}%` }}
           />
         </div>
 
-        <div className="flex items-center justify-between text-[10px] font-mono text-near-textMuted pt-1 border-t border-near-border/40">
-          <span>Remaining: <span className="text-near-green">{fencing?.remaining_allowance_near ?? 2.32} NEAR</span></span>
-          <span>Used: {pct}%</span>
+        <div className="flex items-center justify-between text-[10px] font-mono text-[#6B7280]">
+          <span>Remaining: <span className="text-[#EDEDEF]">{fencing?.remaining_allowance_near ?? 2.32} NEAR</span></span>
+          <span>{pct}% utilized</span>
         </div>
       </div>
 
-      {/* Allowed Contracts List */}
-      <div className="text-[10px] font-mono text-near-textMuted flex flex-col gap-1">
-        <span>Restricted Smart Contracts:</span>
-        <div className="flex flex-wrap gap-1.5">
-          <span className="bg-near-surfaceElevated border border-near-border px-2 py-0.5 rounded text-near-textSecondary">
-            v1.signer-prod.testnet
+      {/* Allowed Smart Contracts */}
+      <div className="flex flex-col gap-1.5 pt-0.5">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-[#525866]">Whitelisted Contracts</span>
+        <div className="flex items-center gap-1.5">
+          <span className="bg-[#090A0D] border border-[#1A1D24] px-2 py-0.5 rounded text-[10px] font-mono text-[#9CA3AF]">
+            v1.signer (MPC)
           </span>
-          <span className="bg-near-surfaceElevated border border-near-border px-2 py-0.5 rounded text-near-textSecondary">
-            intents.near
+          <span className="bg-[#090A0D] border border-[#1A1D24] px-2 py-0.5 rounded text-[10px] font-mono text-[#9CA3AF]">
+            intents.near (1Click)
           </span>
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Coins, CheckCircle, ArrowDownRight, Globe } from "lucide-react";
+import { Coins, ArrowDownLeft } from "lucide-react";
 import { fetchAgentEconomy } from "../lib/api";
 import { AgentEconomyMetrics } from "../lib/types";
 
@@ -18,64 +18,64 @@ export const AgentEconomyCard: React.FC = () => {
   const count = economy?.total_tasks_fulfilled ?? 3;
 
   return (
-    <div className="bg-near-surface border border-near-border rounded p-4 flex flex-col gap-3">
+    <div className="bg-[#101216] border border-[#1E222A] rounded p-4 flex flex-col gap-3">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-near-border pb-2.5">
+      <div className="flex items-center justify-between border-b border-[#1A1D24] pb-2.5">
         <div className="flex items-center gap-2">
-          <Coins className="w-4 h-4 text-near-green" />
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-near-textPrimary">
-            NEAR Agent Economy & Revenue
+          <Coins className="w-3.5 h-3.5 text-[#00EC97]" />
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-[#EDEDEF]">
+            Autonomous Node Revenue
           </h2>
         </div>
-        <span className="text-[10px] font-mono text-near-green bg-near-green/10 border border-near-green/20 px-2 py-0.5 rounded">
-          Autonomous Node
+        <span className="text-[10px] font-mono text-[#7E8492]">
+          Peer Micro-Settlement
         </span>
       </div>
 
-      <p className="text-[11px] text-near-textMuted leading-relaxed">
-        Peer AI agents on NEAR pay this Jetson node micro-fees in NEAR to perform private edge computations, MPC key derivations, and TEE attestation checks.
+      <p className="text-[11px] text-[#7E8492] leading-relaxed">
+        Peer agents compensate this Jetson node in NEAR for edge inference, TEE attestation verification, and MPC signing.
       </p>
 
       {/* Revenue Stat Box */}
-      <div className="bg-near-black border border-near-border rounded p-3 flex items-center justify-between">
+      <div className="bg-[#090A0D] border border-[#1A1D24] rounded p-3 flex items-center justify-between">
         <div>
-          <span className="text-[10px] font-mono uppercase text-near-textMuted block">Total Node Revenue</span>
-          <div className="flex items-baseline gap-1.5 mt-0.5">
-            <span className="text-lg font-mono font-bold text-near-green">
+          <span className="text-[9px] font-mono uppercase tracking-wider text-[#525866] block">Total Settled Revenue</span>
+          <div className="flex items-baseline gap-1 mt-0.5">
+            <span className="text-xl font-mono font-semibold text-[#00EC97] tracking-tight">
               {earned.toFixed(3)}
             </span>
-            <span className="text-xs font-mono text-near-textSecondary">NEAR</span>
+            <span className="text-xs font-mono text-[#7E8492]">NEAR</span>
           </div>
         </div>
 
         <div className="text-right">
-          <span className="text-[10px] font-mono uppercase text-near-textMuted block">Tasks Fulfilled</span>
-          <span className="text-lg font-mono font-bold text-near-textPrimary mt-0.5 block">
+          <span className="text-[9px] font-mono uppercase tracking-wider text-[#525866] block">Jobs Fulfilled</span>
+          <span className="text-xl font-mono font-semibold text-[#EDEDEF] mt-0.5 block tracking-tight">
             {count}
           </span>
         </div>
       </div>
 
-      {/* Recent Peer Tasks */}
-      <div className="flex flex-col gap-1.5 mt-1">
-        <span className="text-[10px] font-mono uppercase text-near-textMuted">Recent Peer Micro-Transactions:</span>
-        <div className="flex flex-col gap-2 max-h-52 overflow-y-auto pr-1">
+      {/* Recent Peer Inflows */}
+      <div className="flex flex-col gap-1.5 pt-1">
+        <span className="text-[10px] font-mono uppercase tracking-wider text-[#525866]">Recent Micro-Payments</span>
+        <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto pr-0.5">
           {economy?.recent_tasks?.map((t) => (
             <div
               key={t.task_id}
-              className="bg-near-black border border-near-border rounded p-2 flex items-center justify-between text-[11px] font-mono"
+              className="bg-[#090A0D] border border-[#1A1D24] rounded p-2 flex items-center justify-between text-[10px] font-mono"
             >
               <div className="flex flex-col gap-0.5">
-                <span className="text-near-textPrimary font-semibold flex items-center gap-1">
-                  <ArrowDownRight className="w-3 h-3 text-near-green" />
+                <span className="text-[#EDEDEF] font-medium flex items-center gap-1">
+                  <ArrowDownLeft className="w-3 h-3 text-[#00EC97]" />
                   {t.service_type}
                 </span>
-                <span className="text-[10px] text-near-textMuted">From: {t.client_agent}</span>
+                <span className="text-[9px] text-[#6B7280]">Client: {t.client_agent}</span>
               </div>
 
               <div className="text-right flex flex-col items-end gap-0.5">
-                <span className="text-near-green font-semibold">+{t.payment_near} NEAR</span>
-                <span className="text-[9px] text-near-textMuted">{t.payment_tx_hash.slice(0, 10)}...</span>
+                <span className="text-[#00EC97] font-medium">+{t.payment_near} NEAR</span>
+                <span className="text-[9px] text-[#525866]">{t.payment_tx_hash.slice(0, 10)}...</span>
               </div>
             </div>
           ))}

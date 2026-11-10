@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, Cpu, Activity, Coins, Lock, Wallet, Copy, Check } from "lucide-react";
+import { Copy, Check, SlidersHorizontal, AlertCircle } from "lucide-react";
 import { BudgetStatus, TelemetryData, NearAccountStatus } from "../lib/types";
 
 interface DeskHeaderProps {
@@ -24,7 +24,6 @@ export const DeskHeader: React.FC<DeskHeaderProps> = ({
   const [copied, setCopied] = useState<boolean>(false);
   const spent = budget?.total_spent_usd ?? 0.0;
   const maxB = budget?.max_budget_usd ?? 10.0;
-  const pct = budget?.percent_used ?? 0.0;
 
   const copyAccount = () => {
     if (!account?.account_id) return;
@@ -34,102 +33,80 @@ export const DeskHeader: React.FC<DeskHeaderProps> = ({
   };
 
   return (
-    <header className="w-full bg-near-surface border-b border-near-border px-6 py-3 flex items-center justify-between sticky top-0 z-30 select-none">
-      {/* Brand & Node Identity */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-near-green shadow-near-glow animate-pulse" />
-          <span className="font-bold tracking-tight text-base text-near-textPrimary flex items-center gap-1.5">
-            Near<span className="text-near-green">Desk</span>
-          </span>
-          <span className="text-[10px] font-mono tracking-widest uppercase bg-near-surfaceElevated border border-near-border px-2 py-0.5 rounded text-near-textSecondary">
-            Edge Node v0.2.0
+    <header className="h-12 w-full bg-[#090A0D]/90 backdrop-blur-md border-b border-[#1A1D24] px-5 flex items-center justify-between sticky top-0 z-30 select-none">
+      {/* Brand & Subtle Breadcrumb */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00EC97]" />
+          <span className="text-xs font-semibold tracking-tight text-[#EDEDEF]">
+            Near<span className="text-[#00EC97]">Desk</span>
           </span>
         </div>
 
-        {/* Status Pills */}
-        <div className="hidden md:flex items-center gap-2 border-l border-near-border pl-4">
-          <div className="flex items-center gap-1.5 text-xs text-near-textSecondary bg-near-black border border-near-border px-2.5 py-1 rounded">
-            <Cpu className="w-3.5 h-3.5 text-near-green" />
-            <span className="font-medium text-near-textPrimary">
-              {telemetry?.is_jetson ? "NVIDIA Jetson Orin" : "Edge Host Node"}
-            </span>
-          </div>
+        <span className="text-[#2C313C]">/</span>
 
-          <div className="flex items-center gap-1.5 text-xs text-near-textSecondary bg-near-black border border-near-border px-2.5 py-1 rounded">
-            <Shield className="w-3.5 h-3.5 text-near-green" />
-            <span>TEE Verifiable</span>
-          </div>
+        <span className="text-[11px] text-[#7E8492] font-medium tracking-tight">
+          {telemetry?.is_jetson ? "NVIDIA Jetson Orin" : "Edge Station"}
+        </span>
 
-          <div className="flex items-center gap-1.5 text-xs text-near-textSecondary bg-near-black border border-near-border px-2.5 py-1 rounded">
-            <Lock className="w-3.5 h-3.5 text-near-green" />
-            <span>NEAR MPC Signer</span>
-          </div>
-
-          <button
-            onClick={onOpenOnboarding}
-            className="flex items-center gap-1.5 text-xs text-near-textSecondary hover:text-near-green bg-near-black border border-near-border px-2.5 py-1 rounded transition-colors"
-          >
-            <span>Hardware Setup</span>
-          </button>
-        </div>
+        <span className="text-[10px] font-mono uppercase text-[#00EC97]/80 bg-[#00EC97]/8 border border-[#00EC97]/20 px-1.5 py-0.2 rounded-sm ml-1">
+          {account?.network || "Mainnet"}
+        </span>
       </div>
 
-      {/* Right Controls: Real Account + Approvals + Strict Budget Meter */}
-      <div className="flex items-center gap-3">
-        {/* Real NEAR On-Chain Account Pill */}
-        {account && (
-          <button
-            onClick={copyAccount}
-            title={account.account_id}
-            className="hidden sm:flex items-center gap-1.5 bg-near-black hover:bg-near-surfaceElevated border border-near-border px-2.5 py-1.5 rounded text-xs font-mono transition-colors"
-          >
-            <Wallet className="w-3.5 h-3.5 text-near-green" />
-            <span className="text-near-textSecondary">
-              {account.account_id.length > 16
-                ? `${account.account_id.slice(0, 6)}...${account.account_id.slice(-4)}`
-                : account.account_id}
-            </span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${
-              account.balance_near > 0 ? "bg-near-green/10 text-near-green" : "bg-zinc-800 text-zinc-400"
-            }`}>
-              {account.balance_near.toFixed(2)} NEAR
-            </span>
-            {copied ? <Check className="w-3 h-3 text-near-green" /> : <Copy className="w-3 h-3 text-near-textMuted" />}
-          </button>
-        )}
-
-        {/* Approval Queue Trigger */}
+      {/* Right Controls: Minimal, Precision Detailing */}
+      <div className="flex items-center gap-2 text-xs font-mono">
+        {/* Approvals Trigger */}
         {pendingApprovalsCount > 0 && (
           <button
             onClick={onOpenApprovals}
-            className="flex items-center gap-2 px-3 py-1 text-xs font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded hover:bg-amber-500/20 transition-all animate-pulse"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-sans font-medium text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded hover:bg-amber-500/20 transition-colors"
           >
-            <Activity className="w-3.5 h-3.5" />
-            <span>{pendingApprovalsCount} Action{pendingApprovalsCount > 1 ? "s" : ""} Pending</span>
+            <AlertCircle className="w-3 h-3" />
+            <span>{pendingApprovalsCount} Action{pendingApprovalsCount > 1 ? "s" : ""}</span>
           </button>
         )}
 
-        {/* Budget Meter ($10 Strict Ceiling) */}
-        <div className="flex items-center gap-3 bg-near-black border border-near-border px-3 py-1.5 rounded">
-          <div className="flex items-center gap-1.5 text-xs">
-            <Coins className="w-3.5 h-3.5 text-near-green" />
-            <span className="text-near-textMuted font-mono">NEAR AI Budget:</span>
-            <span className="font-mono font-semibold text-near-textPrimary">
-              ${spent.toFixed(4)}
+        {/* Account & Balance Pill */}
+        {account && (
+          <button
+            onClick={copyAccount}
+            title={`Copy ${account.account_id}`}
+            className="flex items-center gap-1.5 bg-[#121418] hover:bg-[#181B21] border border-[#20252E] px-2 py-1 rounded text-[11px] transition-colors"
+          >
+            <span className="text-[#969CAC]">
+              {account.account_id.length > 14
+                ? `${account.account_id.slice(0, 5)}...${account.account_id.slice(-4)}`
+                : account.account_id}
             </span>
-            <span className="text-near-textMuted font-mono">/ ${maxB.toFixed(2)}</span>
-          </div>
+            <span className="text-[#3A404F]">|</span>
+            <span className="text-[#00EC97] font-semibold">
+              {account.balance_near.toFixed(2)} N
+            </span>
+            {copied ? (
+              <Check className="w-2.5 h-2.5 text-[#00EC97]" />
+            ) : (
+              <Copy className="w-2.5 h-2.5 text-[#555C6E]" />
+            )}
+          </button>
+        )}
 
-          <div className="w-16 bg-near-surfaceElevated h-1.5 rounded-full overflow-hidden border border-near-border">
-            <div
-              className={`h-full transition-all duration-300 ${
-                pct > 80 ? "bg-red-500" : pct > 50 ? "bg-amber-400" : "bg-near-green"
-              }`}
-              style={{ width: `${Math.min(100, pct)}%` }}
-            />
-          </div>
+        {/* AI Budget Capsule */}
+        <div className="flex items-center gap-1.5 bg-[#121418] border border-[#20252E] px-2 py-1 rounded text-[11px] text-[#969CAC]">
+          <span className="text-[#555C6E]">AI:</span>
+          <span className="text-[#EDEDEF]">${spent.toFixed(3)}</span>
+          <span className="text-[#404655]">/</span>
+          <span className="text-[#687082]">${maxB.toFixed(0)}</span>
         </div>
+
+        {/* Hardware Setup / Pairing Drawer Toggle */}
+        <button
+          onClick={onOpenOnboarding}
+          title="Hardware Pairing & Discovery"
+          className="p-1.5 text-[#7E8492] hover:text-[#EDEDEF] bg-[#121418] hover:bg-[#181B21] border border-[#20252E] rounded transition-colors"
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+        </button>
       </div>
     </header>
   );

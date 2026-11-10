@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Fingerprint, Copy, Check, ShieldCheck, Search, Code, FileText, CheckCircle2 } from "lucide-react";
+import { Fingerprint, Copy, Check, Search, Code, ShieldCheck, ArrowUpRight } from "lucide-react";
 import { fetchDIDDocument, fetchVerifiableCredential, resolveDIDOnChain } from "../lib/api";
 import { W3CDIDDocument, VerifiableCredential } from "../lib/types";
 
@@ -36,91 +36,99 @@ export const AgentDIDCard: React.FC = () => {
   };
 
   return (
-    <div className="bg-near-surface border border-near-border rounded p-4 flex flex-col gap-3">
+    <div className="bg-[#101216] border border-[#1E222A] rounded p-4 flex flex-col gap-3">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-near-border pb-2.5">
+      <div className="flex items-center justify-between border-b border-[#1A1D24] pb-2.5">
         <div className="flex items-center gap-2">
-          <Fingerprint className="w-4 h-4 text-near-green" />
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-near-textPrimary">
-            W3C Decentralized Identifier (DID)
+          <Fingerprint className="w-3.5 h-3.5 text-[#00EC97]" />
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider text-[#EDEDEF]">
+            W3C Decentralized Identifier
           </h2>
         </div>
-        <span className="text-[10px] font-mono text-near-green bg-near-green/10 border border-near-green/20 px-2 py-0.5 rounded">
-          did:near Specification
+        <span className="text-[10px] font-mono text-[#7E8492] tracking-tight">
+          did:near Spec v1.0
         </span>
       </div>
 
-      <p className="text-[11px] text-near-textMuted leading-relaxed">
-        Autonomous agent identity conforming to W3C DID Core standards and anchored into the NEAR Protocol key infrastructure.
+      <p className="text-[11px] text-[#7E8492] leading-relaxed">
+        Sovereign edge agent identity anchored cryptographically into NEAR key infrastructure.
       </p>
 
       {/* DID URI Bar */}
-      <div className="bg-near-black border border-near-border rounded p-2.5 flex items-center justify-between text-xs font-mono">
+      <div className="bg-[#0A0B0E] border border-[#1A1D24] rounded px-3 py-2 flex items-center justify-between text-xs font-mono">
         <div className="flex flex-col gap-0.5 overflow-hidden pr-2">
-          <span className="text-[10px] uppercase text-near-textMuted">AGENT DID URI</span>
-          <span className="text-near-green font-semibold truncate text-[11px]">
+          <span className="text-[9px] uppercase tracking-wider text-[#525866]">Agent Identifier</span>
+          <span className="text-[#00EC97] font-medium truncate text-[11px]">
             {didDoc?.id || "did:near:loading..."}
           </span>
         </div>
         <button
           onClick={copyDID}
-          className="flex items-center gap-1 text-[11px] text-near-textSecondary hover:text-near-green transition-colors shrink-0 bg-near-surfaceElevated px-2 py-1 rounded border border-near-border"
+          aria-label="Copy Agent DID"
+          className="flex items-center gap-1 text-[10px] text-[#9CA3AF] hover:text-[#EDEDEF] transition-colors shrink-0 bg-[#14161C] hover:bg-[#1A1D24] px-2 py-1 rounded border border-[#1E222A]"
         >
-          {copied ? <Check className="w-3 h-3 text-near-green" /> : <Copy className="w-3 h-3" />}
+          {copied ? <Check className="w-3 h-3 text-[#00EC97]" /> : <Copy className="w-3 h-3" />}
           <span>{copied ? "Copied" : "Copy"}</span>
         </button>
       </div>
 
-      {/* Sub-tab view switcher */}
-      <div className="grid grid-cols-3 gap-1 bg-near-black p-1 border border-near-border rounded text-[10px] font-mono">
+      {/* View Switcher */}
+      <div
+        role="tablist"
+        aria-label="DID Views"
+        className="grid grid-cols-3 gap-1 bg-[#090A0D] p-1 border border-[#1A1D24] rounded text-[10px] font-mono"
+      >
         <button
+          role="tab"
+          aria-selected={viewMode === "document"}
           onClick={() => setViewMode("document")}
-          className={`py-1 rounded flex items-center justify-center gap-1 transition-colors ${
+          className={`py-1 rounded transition-colors text-center ${
             viewMode === "document"
-              ? "bg-near-surfaceElevated text-near-green font-semibold border border-near-border"
-              : "text-near-textMuted hover:text-near-textSecondary"
+              ? "bg-[#14171E] text-[#EDEDEF] font-medium border border-[#232833]"
+              : "text-[#6B7280] hover:text-[#9CA3AF]"
           }`}
         >
-          <Code className="w-3 h-3" />
-          <span>DID Document</span>
+          DID Document
         </button>
 
         <button
+          role="tab"
+          aria-selected={viewMode === "credential"}
           onClick={() => setViewMode("credential")}
-          className={`py-1 rounded flex items-center justify-center gap-1 transition-colors ${
+          className={`py-1 rounded transition-colors text-center ${
             viewMode === "credential"
-              ? "bg-near-surfaceElevated text-near-green font-semibold border border-near-border"
-              : "text-near-textMuted hover:text-near-textSecondary"
+              ? "bg-[#14171E] text-[#EDEDEF] font-medium border border-[#232833]"
+              : "text-[#6B7280] hover:text-[#9CA3AF]"
           }`}
         >
-          <FileText className="w-3 h-3" />
-          <span>Verifiable Credential</span>
+          Verifiable Credential
         </button>
 
         <button
+          role="tab"
+          aria-selected={viewMode === "resolver"}
           onClick={() => setViewMode("resolver")}
-          className={`py-1 rounded flex items-center justify-center gap-1 transition-colors ${
+          className={`py-1 rounded transition-colors text-center ${
             viewMode === "resolver"
-              ? "bg-near-surfaceElevated text-near-green font-semibold border border-near-border"
-              : "text-near-textMuted hover:text-near-textSecondary"
+              ? "bg-[#14171E] text-[#EDEDEF] font-medium border border-[#232833]"
+              : "text-[#6B7280] hover:text-[#9CA3AF]"
           }`}
         >
-          <Search className="w-3 h-3" />
-          <span>On-Chain Resolver</span>
+          Live Resolver
         </button>
       </div>
 
       {/* View 1: DID Document (JSON-LD) */}
       {viewMode === "document" && (
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between text-[10px] font-mono text-near-textMuted px-1">
-            <span>Verification Methods: {didDoc?.verificationMethod.length || 4} Keys</span>
-            <span className="text-near-green flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" /> W3C Compliant
+          <div className="flex items-center justify-between text-[10px] font-mono text-[#6B7280]">
+            <span>Verification Methods: {didDoc?.verificationMethod.length || 4} keys</span>
+            <span className="text-[#00EC97] flex items-center gap-1 text-[10px]">
+              <ShieldCheck className="w-3 h-3" /> W3C Conforming
             </span>
           </div>
 
-          <div className="bg-near-black border border-near-border rounded p-3 text-[10px] font-mono text-near-textSecondary max-h-52 overflow-y-auto">
+          <div className="bg-[#090A0D] border border-[#1A1D24] rounded p-2.5 text-[10px] font-mono text-[#9CA3AF] max-h-48 overflow-y-auto leading-relaxed">
             <pre className="whitespace-pre-wrap break-all">
               {JSON.stringify(didDoc, null, 2)}
             </pre>
@@ -131,21 +139,26 @@ export const AgentDIDCard: React.FC = () => {
       {/* View 2: Verifiable Credential */}
       {viewMode === "credential" && (
         <div className="flex flex-col gap-2 text-xs font-mono">
-          <div className="bg-near-black border border-near-border rounded p-3 flex flex-col gap-1.5 text-[11px]">
+          <div className="bg-[#090A0D] border border-[#1A1D24] rounded p-2.5 flex flex-col gap-1.5 text-[10px]">
             <div className="flex items-center justify-between">
-              <span className="text-near-green font-semibold">AutonomousEdgeAgentCredential</span>
-              <span className="text-[10px] text-near-textMuted">Ed25519Signature2020</span>
+              <span className="text-[#EDEDEF] font-medium">AutonomousEdgeAgentCredential</span>
+              <span className="text-[#6B7280]">Ed25519Signature2020</span>
             </div>
-            <span className="text-[10px] text-near-textMuted">Hardware: {vc?.credentialSubject.hardwarePlatform}</span>
-            <span className="text-[10px] text-near-textMuted">Enclave: {vc?.credentialSubject.executionEnvironment}</span>
+            <div className="flex items-center justify-between text-[#7E8492]">
+              <span>Hardware Platform</span>
+              <span className="text-[#EDEDEF]">{vc?.credentialSubject.hardwarePlatform || "NVIDIA Jetson Orin"}</span>
+            </div>
+            <div className="flex items-center justify-between text-[#7E8492]">
+              <span>Enclave Security</span>
+              <span className="text-[#00EC97]">{vc?.credentialSubject.executionEnvironment || "Hardware Root of Trust"}</span>
+            </div>
             
-            <div className="mt-1 pt-1 border-t border-near-border/40 text-[9px] text-near-textMuted break-all">
-              <span className="text-near-textSecondary">Cryptographic Proof JWS: </span>
-              {vc?.proof.jws.slice(0, 36)}...
+            <div className="mt-1 pt-1.5 border-t border-[#16181F] text-[9px] text-[#525866] truncate font-mono">
+              Proof JWS: <span className="text-[#7E8492]">{vc?.proof.jws.slice(0, 36)}...</span>
             </div>
           </div>
 
-          <div className="bg-near-black border border-near-border rounded p-2.5 text-[10px] font-mono text-near-textMuted max-h-40 overflow-y-auto">
+          <div className="bg-[#090A0D] border border-[#1A1D24] rounded p-2.5 text-[10px] font-mono text-[#7E8492] max-h-36 overflow-y-auto">
             <pre className="whitespace-pre-wrap break-all">
               {JSON.stringify(vc, null, 2)}
             </pre>
@@ -156,30 +169,30 @@ export const AgentDIDCard: React.FC = () => {
       {/* View 3: Live On-Chain DID Resolver */}
       {viewMode === "resolver" && (
         <div className="flex flex-col gap-2 text-xs font-mono">
-          <form onSubmit={handleResolve} className="flex items-center gap-2">
+          <form onSubmit={handleResolve} className="flex items-center gap-1.5">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Query account or DID (e.g. root.near)..."
-              className="flex-1 bg-near-black border border-near-border rounded px-2.5 py-1.5 text-xs text-near-textPrimary font-mono focus:border-near-green focus:outline-none"
+              placeholder="Enter NEAR account (e.g. root.near)..."
+              className="flex-1 bg-[#090A0D] border border-[#1A1D24] rounded px-2.5 py-1.5 text-[11px] text-[#EDEDEF] font-mono focus:border-[#00EC97] focus:outline-none transition-colors"
             />
             <button
               type="submit"
               disabled={resolving}
-              className="px-3 py-1.5 bg-near-surfaceElevated border border-near-border text-near-green hover:bg-near-green/10 text-xs font-mono rounded transition-colors"
+              className="px-3 py-1.5 bg-[#14171E] border border-[#232833] hover:border-[#00EC97]/40 text-[#EDEDEF] hover:text-[#00EC97] text-[11px] font-mono rounded transition-colors"
             >
               {resolving ? "Resolving..." : "Resolve"}
             </button>
           </form>
 
           {resolveResult && (
-            <div className="bg-near-black border border-near-border rounded p-3 flex flex-col gap-1 text-[11px] max-h-48 overflow-y-auto">
-              <div className="flex items-center justify-between text-near-green font-semibold">
-                <span>Resolved: {resolveResult.did}</span>
-                <span className="text-[10px] text-near-textMuted">Keys: {resolveResult.on_chain_keys_count}</span>
+            <div className="bg-[#090A0D] border border-[#1A1D24] rounded p-2.5 flex flex-col gap-1 text-[10px] max-h-44 overflow-y-auto">
+              <div className="flex items-center justify-between text-[#00EC97] font-medium">
+                <span>{resolveResult.did}</span>
+                <span className="text-[#6B7280]">{resolveResult.on_chain_keys_count} keys on-chain</span>
               </div>
-              <pre className="text-[10px] text-near-textSecondary overflow-x-auto whitespace-pre-wrap break-all mt-1">
+              <pre className="text-[10px] text-[#7E8492] overflow-x-auto whitespace-pre-wrap break-all mt-1">
                 {JSON.stringify(resolveResult.did_document, null, 2)}
               </pre>
             </div>

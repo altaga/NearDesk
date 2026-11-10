@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Sparkles, Wrench, ChevronRight, CornerDownLeft } from "lucide-react";
+import { CornerDownLeft, ChevronDown, ChevronRight, Terminal, Sparkles } from "lucide-react";
 import { ChatMessage } from "../lib/types";
 import { sendChatMessage } from "../lib/api";
 
@@ -10,12 +10,12 @@ interface ChatStreamProps {
   onApprovalUpdate?: () => void;
 }
 
-const DEFAULT_PROMPTS = [
-  "Check Jetson hardware telemetry & thermal metrics",
-  "Derive Ethereum and Solana addresses via NEAR Chain Signatures",
-  "Get 1Click swap quote for 2.5 SOL to NEAR via solver network",
-  "Verify TEE hardware attestation report for confidential computing",
-  "Inspect current NEAR AI Cloud budget and token usage ($10 limit)"
+const QUICK_ACTIONS = [
+  "Hardware telemetry & thermal metrics",
+  "Derive Ethereum and Solana addresses",
+  "Quote 2.5 SOL to NEAR via 1Click",
+  "Verify TEE hardware attestation",
+  "Inspect NEAR AI budget status"
 ];
 
 export const ChatStream: React.FC<ChatStreamProps> = ({
@@ -27,13 +27,14 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
       id: "intro-1",
       role: "assistant",
       content:
-        "Welcome to NearDesk. I am Nova, your edge-native autonomous operator running on this Jetson node. I manage local routines, derive multi-chain accounts via NEAR Chain Signatures, and route cross-chain liquidity with NEAR Intents—protected by strict human-in-the-loop approval gates.",
-      tier: "edge_init",
+        "NearDesk edge operator initialized. Local routines operate on hardware; multi-chain accounts derive via NEAR Chain Signatures; cross-chain liquidity settles through NEAR Intents. High-risk actions require operator authorization.",
+      tier: "local_fast",
       timestamp: Date.now(),
     },
   ]);
   const [input, setInput] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -43,6 +44,10 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading]);
+
+  const toggleTool = (idxKey: string) => {
+    setExpandedTools((prev) => ({ ...prev, [idxKey]: !prev[idxKey] }));
+  };
 
   const handleSend = async (textToSend?: string) => {
     const text = textToSend || input;
@@ -70,7 +75,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
       const assistantMsg: ChatMessage = {
         id: `ast-${Date.now()}`,
         role: "assistant",
-        content: response.content || "Command completed.",
+        content: response.content || "Execution completed.",
         tier: response.tier,
         tools: response.tool_executions || [],
         timestamp: Date.now(),
@@ -80,7 +85,7 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
       const errorMsg: ChatMessage = {
         id: `err-${Date.now()}`,
         role: "assistant",
-        content: `Error processing request: ${response?.error?.message || "NearDesk API unreachable"}`,
+        content: `Execution error: ${response?.error?.message || "NearDesk API unreachable"}`,
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -99,124 +104,108 @@ export const ChatStream: React.FC<ChatStreamProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-near-black border border-near-border rounded overflow-hidden">
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex gap-3 text-xs leading-relaxed ${
-              msg.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            {msg.role !== "user" && (
-              <div className="w-6 h-6 rounded bg-near-surfaceElevated border border-near-border flex items-center justify-center shrink-0 text-near-green">
-                <Bot className="w-3.5 h-3.5" />
-              </div>
-            )}
-
-            <div
-              className={`max-w-[85%] rounded p-3 flex flex-col gap-2 ${
-                msg.role === "user"
-                  ? "bg-near-surfaceElevated border border-near-border text-near-textPrimary"
-                  : "bg-near-surface border border-near-border/80 text-near-textPrimary"
-              }`}
-            >
-              {/* Message Header */}
-              <div className="flex items-center justify-between text-[10px] font-mono text-near-textMuted border-b border-near-border/40 pb-1">
-                <span>{msg.role === "user" ? "Operator" : "Nova Operator"}</span>
+    <div className="flex flex-col h-full bg-[#0B0D11] border border-[#1A1D24] rounded-lg overflow-hidden">
+      {/* Messages Scroll Area */}
+      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
+        {messages.map((msg) => {
+          const isUser = msg.role === "user";
+          return (
+            <div key={msg.id} className="flex flex-col gap-1.5 max-w-3xl">
+              {/* Header Label */}
+              <div className="flex items-center gap-2 text-[10px] font-mono text-[#585F70]">
+                <span className={isUser ? "text-[#EDEDEF] font-medium" : "text-[#00EC97] font-medium"}>
+                  {isUser ? "Operator" : "Nova"}
+                </span>
                 {msg.tier && (
-                  <span className="text-near-green uppercase px-1.5 py-0.2 bg-near-green/10 rounded">
+                  <span className="text-[9px] uppercase px-1 py-0.2 bg-[#14171E] text-[#7E8492] rounded-sm">
                     {msg.tier}
                   </span>
                 )}
+                <span className="text-[#323744]">·</span>
+                <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
               </div>
 
-              {/* Message Content */}
-              <div className="whitespace-pre-wrap font-sans text-xs">
-                {msg.content}
+              {/* Message Body */}
+              <div className={`text-xs leading-relaxed ${isUser ? "text-[#EDEDEF] pl-1" : "text-[#B4BAC7] pl-1 font-normal"}`}>
+                <div className="whitespace-pre-wrap">{msg.content}</div>
               </div>
 
-              {/* Tool Execution Badges */}
+              {/* Collapsible Tools */}
               {msg.tools && msg.tools.length > 0 && (
-                <div className="flex flex-col gap-1.5 pt-1 border-t border-near-border/40">
-                  {msg.tools.map((t, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-near-black border border-near-border/60 rounded p-2 text-[11px] font-mono"
-                    >
-                      <div className="flex items-center gap-1.5 text-near-green font-semibold mb-1">
-                        <Wrench className="w-3 h-3" />
-                        <span>Tool Invocation: {t.tool}</span>
+                <div className="flex flex-col gap-1.5 mt-2 pl-1">
+                  {msg.tools.map((t, idx) => {
+                    const key = `${msg.id}-${idx}`;
+                    const isExpanded = expandedTools[key];
+                    return (
+                      <div key={key} className="bg-[#101217] border border-[#1E222B] rounded text-[11px] font-mono overflow-hidden">
+                        <button
+                          onClick={() => toggleTool(key)}
+                          className="w-full px-3 py-1.5 flex items-center justify-between text-[#8E95A5] hover:text-[#EDEDEF] hover:bg-[#15181F] transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Terminal className="w-3 h-3 text-[#00EC97]" />
+                            <span>Tool: {t.tool}</span>
+                          </div>
+                          {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        </button>
+                        {isExpanded && (
+                          <div className="p-3 bg-[#08090C] border-t border-[#1A1D24] text-[10px] text-[#7E8492] overflow-x-auto max-h-48">
+                            <pre>{JSON.stringify(t.output, null, 2)}</pre>
+                          </div>
+                        )}
                       </div>
-                      <pre className="text-near-textMuted text-[10px] overflow-x-auto max-h-28">
-                        {JSON.stringify(t.output, null, 2)}
-                      </pre>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
-
-            {msg.role === "user" && (
-              <div className="w-6 h-6 rounded bg-near-surfaceElevated border border-near-border flex items-center justify-center shrink-0 text-near-textSecondary">
-                <User className="w-3.5 h-3.5" />
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
 
         {loading && (
-          <div className="flex gap-3 text-xs justify-start">
-            <div className="w-6 h-6 rounded bg-near-surfaceElevated border border-near-border flex items-center justify-center shrink-0 text-near-green">
-              <Bot className="w-3.5 h-3.5 animate-pulse" />
-            </div>
-            <div className="bg-near-surface border border-near-border rounded px-3 py-2 text-near-textMuted flex items-center gap-2 font-mono text-xs">
-              <Sparkles className="w-3.5 h-3.5 text-near-green animate-spin" />
-              <span>Edge Agent reasoning...</span>
-            </div>
+          <div className="flex items-center gap-2 text-xs text-[#6B7280] font-mono py-2 pl-1">
+            <Sparkles className="w-3 h-3 text-[#00EC97] animate-spin" />
+            <span>Processing reasoning routine...</span>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick Action Chips */}
-      <div className="px-3 py-2 border-t border-near-border bg-near-surface flex items-center gap-2 overflow-x-auto">
-        <span className="text-[10px] font-mono uppercase text-near-textMuted shrink-0">
-          Quick Actions:
-        </span>
-        {DEFAULT_PROMPTS.map((prompt, idx) => (
+      {/* Suggested Quick Prompts */}
+      <div className="px-4 py-2 bg-[#0E1015] border-t border-[#181B22] flex items-center gap-2 overflow-x-auto select-none">
+        <span className="text-[10px] font-mono text-[#4C5261] uppercase tracking-wider shrink-0">Prompts:</span>
+        {QUICK_ACTIONS.map((action, idx) => (
           <button
             key={idx}
-            onClick={() => handleSend(prompt)}
+            onClick={() => handleSend(action)}
             disabled={loading}
-            className="text-[11px] text-near-textSecondary bg-near-black hover:text-near-green border border-near-border hover:border-near-green/30 px-2.5 py-1 rounded shrink-0 transition-colors flex items-center gap-1"
+            className="text-[11px] text-[#7E8492] hover:text-[#EDEDEF] bg-[#14161D] hover:bg-[#1B1E27] border border-[#20242E] px-2.5 py-1 rounded shrink-0 transition-colors"
           >
-            <span>{prompt}</span>
-            <ChevronRight className="w-3 h-3" />
+            {action}
           </button>
         ))}
       </div>
 
-      {/* Input Bar */}
-      <div className="p-3 bg-near-surface border-t border-near-border flex items-end gap-2">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Command Nova (e.g., 'Derive a Bitcoin address for subaccount 2', 'Swap SOL to NEAR')..."
-          rows={2}
-          className="flex-1 bg-near-black border border-near-border rounded p-2 text-xs text-near-textPrimary placeholder:text-near-textMuted focus:outline-none focus:border-near-green resize-none font-sans"
-        />
-        <button
-          onClick={() => handleSend()}
-          disabled={!input.trim() || loading}
-          className="h-10 px-4 bg-near-green hover:bg-near-greenHover disabled:opacity-40 disabled:hover:bg-near-green text-black font-semibold rounded text-xs transition-colors flex items-center gap-1.5 shrink-0 shadow-near-glow"
-        >
-          <span>Send</span>
-          <CornerDownLeft className="w-3.5 h-3.5" />
-        </button>
+      {/* Input Box */}
+      <div className="p-3 bg-[#0B0D11] border-t border-[#181B22]">
+        <div className="relative flex items-center bg-[#101217] border border-[#1E222A] focus-within:border-[#00EC97]/50 rounded-lg p-2 transition-colors">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Instruct Nova (e.g. 'Derive Solana address', 'Quote 2.5 SOL to NEAR')..."
+            rows={1}
+            className="w-full bg-transparent text-xs text-[#EDEDEF] placeholder-[#505666] focus:outline-none resize-none font-sans pr-10"
+          />
+          <button
+            onClick={() => handleSend()}
+            disabled={!input.trim() || loading}
+            className="absolute right-2 p-1.5 text-black bg-[#00EC97] hover:bg-[#00FFA3] disabled:opacity-20 disabled:hover:bg-[#00EC97] rounded transition-colors"
+          >
+            <CornerDownLeft className="w-3 h-3" />
+          </button>
+        </div>
       </div>
     </div>
   );
