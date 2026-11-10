@@ -104,6 +104,11 @@ export async function authenticateWithClientKey(
   });
 
   if (!chalRes.ok) {
+    if (chalRes.status === 502 || chalRes.status === 503 || chalRes.status === 504) {
+      throw new Error(
+        `NVIDIA Jetson board is currently offline (HTTP ${chalRes.status}). Plug in the board and wait for network initialization.`
+      );
+    }
     const err = await chalRes.json().catch(() => ({}));
     throw new Error(err.detail || `Challenge request failed (${chalRes.status})`);
   }
@@ -205,6 +210,11 @@ export async function authenticateWithMeteor(
   });
 
   if (!chalRes.ok) {
+    if (chalRes.status === 502 || chalRes.status === 503 || chalRes.status === 504) {
+      throw new Error(
+        `NVIDIA Jetson board is currently offline (HTTP ${chalRes.status}). Plug in the board and wait for network initialization.`
+      );
+    }
     const err = await chalRes.json().catch(() => ({}));
     throw new Error(err.detail || "Challenge generation failed on Jetson");
   }
@@ -287,6 +297,11 @@ export async function authenticateWithNodeKey(
   });
 
   if (!chalRes.ok) {
+    if (chalRes.status === 502 || chalRes.status === 503 || chalRes.status === 504) {
+      throw new Error(
+        `NVIDIA Jetson board is currently offline (HTTP ${chalRes.status}). Plug in the board and wait for network initialization.`
+      );
+    }
     const err = await chalRes.json().catch(() => ({}));
     throw new Error(err.detail || `Challenge generation failed (HTTP ${chalRes.status})`);
   }
