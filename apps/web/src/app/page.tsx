@@ -9,14 +9,15 @@ import { IntentSwapCard } from "../components/IntentSwapCard";
 import { AgentFencingCard } from "../components/AgentFencingCard";
 import { AuditTrailCard } from "../components/AuditTrailCard";
 import { AgentEconomyCard } from "../components/AgentEconomyCard";
+import { AgentDIDCard } from "../components/AgentDIDCard";
 import { TerminalDrawer } from "../components/TerminalDrawer";
 import { ApprovalModal } from "../components/ApprovalModal";
 import { OnboardingWizard } from "../components/OnboardingWizard";
 import { fetchTelemetry, fetchBudget, fetchApprovals, fetchOnChainAccount } from "../lib/api";
 import { TelemetryData, BudgetStatus, ApprovalRequest, NearAccountStatus } from "../lib/types";
-import { KeyRound, ShieldCheck, History, Coins } from "lucide-react";
+import { KeyRound, ShieldCheck, History, Coins, Fingerprint } from "lucide-react";
 
-type RightPanelTab = "chain_intents" | "security_fencing" | "audit_trail" | "agent_economy";
+type RightPanelTab = "chain_intents" | "security_fencing" | "audit_trail" | "agent_economy" | "did_identity";
 
 export default function DeskPage() {
   const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
@@ -74,53 +75,65 @@ export default function DeskPage() {
         {/* Right / Secondary Dock with Tabbed Views */}
         <section className="lg:col-span-5 h-full flex flex-col gap-3 min-h-0">
           {/* Tab Selector */}
-          <div className="grid grid-cols-4 gap-1 p-1 bg-near-surface border border-near-border rounded text-[11px] font-mono">
+          <div className="grid grid-cols-5 gap-1 p-1 bg-near-surface border border-near-border rounded text-[10px] font-mono">
             <button
               onClick={() => setActiveTab("chain_intents")}
-              className={`flex items-center justify-center gap-1.5 py-1.5 rounded transition-all ${
+              className={`flex items-center justify-center gap-1 py-1.5 rounded transition-all ${
                 activeTab === "chain_intents"
                   ? "bg-near-black text-near-green font-semibold border border-near-border/80 shadow-surface-subtle"
                   : "text-near-textMuted hover:text-near-textSecondary"
               }`}
             >
-              <KeyRound className="w-3.5 h-3.5" />
+              <KeyRound className="w-3 h-3" />
               <span>Multi-Chain</span>
             </button>
 
             <button
               onClick={() => setActiveTab("security_fencing")}
-              className={`flex items-center justify-center gap-1.5 py-1.5 rounded transition-all ${
+              className={`flex items-center justify-center gap-1 py-1.5 rounded transition-all ${
                 activeTab === "security_fencing"
                   ? "bg-near-black text-near-green font-semibold border border-near-border/80 shadow-surface-subtle"
                   : "text-near-textMuted hover:text-near-textSecondary"
               }`}
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
+              <ShieldCheck className="w-3 h-3" />
               <span>Fencing</span>
             </button>
 
             <button
               onClick={() => setActiveTab("audit_trail")}
-              className={`flex items-center justify-center gap-1.5 py-1.5 rounded transition-all ${
+              className={`flex items-center justify-center gap-1 py-1.5 rounded transition-all ${
                 activeTab === "audit_trail"
                   ? "bg-near-black text-near-green font-semibold border border-near-border/80 shadow-surface-subtle"
                   : "text-near-textMuted hover:text-near-textSecondary"
               }`}
             >
-              <History className="w-3.5 h-3.5" />
-              <span>Audit Trail</span>
+              <History className="w-3 h-3" />
+              <span>Audit</span>
             </button>
 
             <button
               onClick={() => setActiveTab("agent_economy")}
-              className={`flex items-center justify-center gap-1.5 py-1.5 rounded transition-all ${
+              className={`flex items-center justify-center gap-1 py-1.5 rounded transition-all ${
                 activeTab === "agent_economy"
                   ? "bg-near-black text-near-green font-semibold border border-near-border/80 shadow-surface-subtle"
                   : "text-near-textMuted hover:text-near-textSecondary"
               }`}
             >
-              <Coins className="w-3.5 h-3.5" />
+              <Coins className="w-3 h-3" />
               <span>Economy</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("did_identity")}
+              className={`flex items-center justify-center gap-1 py-1.5 rounded transition-all ${
+                activeTab === "did_identity"
+                  ? "bg-near-black text-near-green font-semibold border border-near-border/80 shadow-surface-subtle"
+                  : "text-near-textMuted hover:text-near-textSecondary"
+              }`}
+            >
+              <Fingerprint className="w-3 h-3" />
+              <span>DID</span>
             </button>
           </div>
 
@@ -143,6 +156,8 @@ export default function DeskPage() {
             {activeTab === "audit_trail" && <AuditTrailCard />}
 
             {activeTab === "agent_economy" && <AgentEconomyCard />}
+
+            {activeTab === "did_identity" && <AgentDIDCard />}
           </div>
         </section>
       </main>

@@ -89,3 +89,18 @@ def test_board_pairing_and_discovery():
     )
     assert claimed["board_id"] == "jetson-orin-test-01"
     assert claimed["near_owner"] == "test.near"
+
+def test_w3c_did_and_verifiable_credentials():
+    from app.near_agent.did import agent_did
+    # 1. Test DID Document
+    did_doc = agent_did.generate_did_document()
+    assert did_doc["id"].startswith("did:near:")
+    assert len(did_doc["verificationMethod"]) >= 4
+    assert len(did_doc["service"]) >= 3
+
+    # 2. Test Verifiable Credential
+    vc = agent_did.generate_signed_verifiable_credential()
+    assert "VerifiableCredential" in vc["type"]
+    assert "proof" in vc
+    assert vc["proof"]["type"] == "Ed25519Signature2020"
+    assert len(vc["proof"]["jws"]) > 20

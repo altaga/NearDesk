@@ -15,6 +15,7 @@ from app.near_chain.keys import agent_keys
 from app.near_chain.audit import audit_trail
 from app.near_agent.identity import agent_identity
 from app.near_agent.services import agent_economy
+from app.near_agent.did import agent_did
 from app.near_intents.swap import near_intents
 from app.guardrails.approval import approval_manager
 from app.chat.engine import chat_engine
@@ -68,6 +69,9 @@ class SubmitPeerTaskRequest(BaseModel):
     service_type: str
     payment_near: float = 0.05
     params: Dict[str, Any] = {}
+
+class ResolveDIDRequest(BaseModel):
+    did_or_account: str
 
 # -------------------------------------------------------------
 # Routes
@@ -152,6 +156,21 @@ async def get_audit_trail():
 async def get_agent_profile():
     """NEAR Agent Registry & DID identity profile."""
     return agent_identity.get_agent_profile()
+
+@app.get("/v1/near/agent/did")
+async def get_agent_did_document():
+    """W3C-compliant DID Document (did:near:<account_id>) for this autonomous agent."""
+    return agent_did.generate_did_document()
+
+@app.get("/v1/near/agent/credential")
+async def get_agent_verifiable_credential():
+    """W3C-compliant Verifiable Credential signed with node's Ed25519 key."""
+    return agent_did.generate_signed_verifiable_credential()
+
+@app.post("/v1/near/agent/did/resolve")
+async def resolve_did(req: ResolveDIDRequest):
+    """Resolve any did:near:<account> on-chain using NEAR RPC access keys."""
+    return await agent_did.resolve_did_onchain(req.did_or_account)
 
 @app.get("/v1/near/agent/economy")
 async def get_agent_economy():
