@@ -72,3 +72,9 @@ logs/
 *.log
 .desk/
 operator_screenshots/
+test_screenshots/
+onboarding_screenshots/
+*.tar.gz
+Skills/
+scripts/
+.cf/

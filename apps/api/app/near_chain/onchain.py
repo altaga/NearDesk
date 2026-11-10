@@ -352,4 +352,12 @@ class NearOnChainClient:
         except Exception as e:
             return {"ok": False, "error": str(e)}
 
+    def sign_message_bytes(self, message: bytes) -> Tuple[str, str]:
+        """Sign arbitrary challenge bytes with node ED25519 private key."""
+        sig = self.priv_key.sign(message)
+        b64_sig = base64.b64encode(sig).decode("utf-8")
+        pub_raw = self.pub_key.public_bytes_raw()
+        pub_str = f"ed25519:{b58encode(pub_raw)}"
+        return b64_sig, pub_str
+
 near_onchain = NearOnChainClient()

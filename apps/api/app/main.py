@@ -26,6 +26,8 @@ from app.jobs.manager import jobs_manager
 from app.memory.manager import memory_manager
 from app.vault.routes import router as vault_router
 from app.brains.routes import router as brains_router
+from app.webrtc import webrtc_manager
+from app.auth import near_auth_manager
 
 app = FastAPI(
     title="NearDesk Sovereign Operator API",
@@ -406,3 +408,82 @@ async def claim_board(req: ClaimBoardRequest):
 async def list_remote_nodes():
     """List active live WebSocket connected Jetson boards."""
     return board_ws_manager.get_connected_boards()
+
+class WebRTCOfferRequest(BaseModel):
+    sdp: str
+    type: str
+    near_account: Optional[str] = None
+    signature: Optional[str] = None
+
+class AuthChallengeRequest(BaseModel):
+    account_id: str
+
+class AuthVerifyRequest(BaseModel):
+    account_id: str
+    public_key: str
+    signature: str
+    nonce: str
+    network: Optional[str] = "testnet"
+
+class SignChallengeRequest(BaseModel):
+    account_id: str
+    nonce: str
+
+@app.post("/v1/auth/sign_challenge")
+async def sign_challenge_endpoint(req: SignChallengeRequest):
+    """Sign an active challenge with the bound node key for operator authentication."""
+    from app.auth.near_auth import _ACTIVE_CHALLENGES
+    challenge_data = _ACTIVE_CHALLENGES.get(req.nonce)
+    if not challenge_data:
+        raise HTTPException(status_code=400, detail="Invalid or expired challenge nonce")
+    
+    sig_b64, pub_key_str = near_onchain.sign_message_bytes(challenge_data["message"].encode("utf-8"))
+    return {
+        "signature": sig_b64,
+        "public_key": pub_key_str,
+        "account_id": req.account_id,
+        "nonce": req.nonce
+    }
+
+@app.post("/v1/auth/challenge")
+async def create_auth_challenge(req: AuthChallengeRequest):
+    """Generate a cryptographic timestamped challenge for the operator's NEAR wallet."""
+    return near_auth_manager.generate_challenge(req.account_id)
+
+@app.post("/v1/auth/verify")
+async def verify_auth_signature(req: AuthVerifyRequest):
+    """Verify NEAR Ed25519 signature against on-chain public keys."""
+    res = await near_auth_manager.verify_signature(
+        account_id=req.account_id,
+        public_key=req.public_key,
+        signature=req.signature,
+        nonce=req.nonce,
+        network=req.network or "testnet"
+    )
+    if not res.get("verified"):
+        raise HTTPException(
+            status_code=401,
+            detail=res.get("error", "Cryptographic verification failed")
+        )
+    return res
+
+@app.get("/v1/webrtc/ice_servers")
+async def get_ice_servers():
+    """Public STUN servers for direct P2P NAT Traversal."""
+    return {
+        "ice_servers": [
+            {"urls": "stun:stun.l.google.com:19302"},
+            {"urls": "stun:stun1.l.google.com:19302"},
+            {"urls": "stun:stun2.l.google.com:19302"},
+        ]
+    }
+
+@app.post("/v1/webrtc/offer")
+async def handle_webrtc_offer(req: WebRTCOfferRequest):
+    """Establish direct P2P WebRTC DataChannel session bypassing cloud relays."""
+    return await webrtc_manager.handle_offer(
+        sdp=req.sdp,
+        sdp_type=req.type,
+        near_account=req.near_account
+    )
+

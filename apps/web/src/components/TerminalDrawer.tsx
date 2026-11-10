@@ -26,7 +26,7 @@ export const TerminalDrawer: React.FC<TerminalDrawerProps> = ({ onCommandSubmitt
     setCmd("");
 
     try {
-      const res = await fetch("http://localhost:8000/v1/board/terminal", {
+      const res = await fetch("/v1/board/terminal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ command: currentCmd }),
