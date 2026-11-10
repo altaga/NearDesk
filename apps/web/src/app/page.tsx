@@ -11,8 +11,8 @@ import { AuditTrailCard } from "../components/AuditTrailCard";
 import { AgentEconomyCard } from "../components/AgentEconomyCard";
 import { TerminalDrawer } from "../components/TerminalDrawer";
 import { ApprovalModal } from "../components/ApprovalModal";
-import { fetchTelemetry, fetchBudget, fetchApprovals } from "../lib/api";
-import { TelemetryData, BudgetStatus, ApprovalRequest } from "../lib/types";
+import { fetchTelemetry, fetchBudget, fetchApprovals, fetchOnChainAccount } from "../lib/api";
+import { TelemetryData, BudgetStatus, ApprovalRequest, NearAccountStatus } from "../lib/types";
 import { KeyRound, ShieldCheck, History, Coins } from "lucide-react";
 
 type RightPanelTab = "chain_intents" | "security_fencing" | "audit_trail" | "agent_economy";
@@ -20,19 +20,22 @@ type RightPanelTab = "chain_intents" | "security_fencing" | "audit_trail" | "age
 export default function DeskPage() {
   const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
   const [budget, setBudget] = useState<BudgetStatus | null>(null);
+  const [account, setAccount] = useState<NearAccountStatus | null>(null);
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [isApprovalOpen, setIsApprovalOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<RightPanelTab>("chain_intents");
 
   const refreshState = async () => {
-    const [t, b, a] = await Promise.all([
+    const [t, b, a, acc] = await Promise.all([
       fetchTelemetry(),
       fetchBudget(),
       fetchApprovals(),
+      fetchOnChainAccount(),
     ]);
     if (t) setTelemetry(t);
     if (b) setBudget(b);
     if (a) setApprovals(a);
+    if (acc) setAccount(acc);
   };
 
   useEffect(() => {
@@ -47,6 +50,7 @@ export default function DeskPage() {
       <DeskHeader
         telemetry={telemetry}
         budget={budget}
+        account={account}
         pendingApprovalsCount={approvals.length}
         onOpenApprovals={() => setIsApprovalOpen(true)}
       />

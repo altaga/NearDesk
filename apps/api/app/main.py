@@ -8,6 +8,7 @@ from app.board.telemetry import telemetry_collector
 from app.near_ai.budget import budget_manager
 from app.near_ai.client import near_ai_client
 from app.near_chain.mpc import chain_signatures
+from app.near_chain.onchain import near_onchain
 from app.near_chain.keys import agent_keys
 from app.near_chain.audit import audit_trail
 from app.near_agent.identity import agent_identity
@@ -113,6 +114,19 @@ async def intent_quote(req: IntentQuoteRequest):
         asset_out=req.asset_out,
         amount_in=req.amount_in,
         slippage_tolerance_bps=req.slippage_bps
+    )
+
+@app.get("/v1/near/account")
+async def get_near_account():
+    """Live on-chain account status (balance, implicit account, funding help)."""
+    return await near_onchain.get_account_status()
+
+@app.post("/v1/near/account/broadcast_test")
+async def broadcast_test():
+    """Broadcast an on-chain action or verify current testnet credentials."""
+    return await near_onchain.broadcast_onchain_audit_action(
+        action_title="Manual Operator On-Chain Ping",
+        payload_hash="0xpingtest"
     )
 
 # --- ADVANCED NEAR AGENTIC FEATURES ---
