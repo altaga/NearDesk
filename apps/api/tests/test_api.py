@@ -61,7 +61,8 @@ def test_agent_key_fencing():
     fencing = agent_keys.get_active_fencing_status()
     assert fencing["master_key_protected"] is True
     assert fencing["gas_allowance_near"] > 0
-    assert "v1.signer-prod.testnet" in fencing["allowed_contracts"]
+    from app.config import settings
+    assert settings.NEAR_MPC_CONTRACT_ID in fencing["allowed_contracts"]
 
 def test_agent_identity_and_registry():
     profile = agent_identity.get_agent_profile()

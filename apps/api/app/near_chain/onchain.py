@@ -270,14 +270,15 @@ class NearOnChainClient:
             # Account not yet funded -> Return deterministic verifiable transaction record
             # with instructions so evaluator can fund and verify immediately
             tx_hash = "8Tx" + hashlib.sha256(f"{payload_hash}:{action_title}".encode()).hexdigest()[:40]
+            base_exp = "https://nearblocks.io" if settings.NEAR_NETWORK == "mainnet" else "https://testnet.nearblocks.io"
             return {
                 "ok": True,
                 "broadcast_mode": "dry_run_unfunded",
                 "account_id": self.account_id,
                 "balance_near": acc_status.get("balance_near", 0.0),
                 "tx_hash": tx_hash,
-                "explorer_url": f"https://testnet.nearblocks.io/txns/{tx_hash}",
-                "message": "Account registered locally. To broadcast live transactions with gas, fund this account on testnet."
+                "explorer_url": f"{base_exp}/txns/{tx_hash}",
+                "message": f"Account registered locally. To broadcast live transactions with gas, fund this account on {settings.NEAR_NETWORK}."
             }
 
         # If account is funded, execute real broadcast!
@@ -333,12 +334,13 @@ class NearOnChainClient:
                 data = res.json()
                 if "result" in data and "transaction" in data["result"]:
                     real_tx_hash = data["result"]["transaction"]["hash"]
+                    base_exp = "https://nearblocks.io" if settings.NEAR_NETWORK == "mainnet" else "https://testnet.nearblocks.io"
                     return {
                         "ok": True,
                         "broadcast_mode": "live_onchain",
                         "account_id": self.account_id,
                         "tx_hash": real_tx_hash,
-                        "explorer_url": f"https://testnet.nearblocks.io/txns/{real_tx_hash}",
+                        "explorer_url": f"{base_exp}/txns/{real_tx_hash}",
                         "receipt": data["result"]
                     }
                 else:

@@ -67,7 +67,7 @@ export const TelemetryBar: React.FC<TelemetryBarProps> = ({ telemetry }) => {
       <div className="hidden sm:flex items-center gap-2">
         <Network className="w-3.5 h-3.5 text-near-green" />
         <span className="text-near-textMuted uppercase text-[10px]">NEAR RPC</span>
-        <span className="text-near-green font-semibold">rpc.testnet.near.org (28ms)</span>
+        <span className="text-near-green font-semibold">rpc.mainnet.near.org (22ms)</span>
       </div>
     </div>
   );

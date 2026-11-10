@@ -56,7 +56,8 @@ class OnChainAuditTrail:
         tx_hash = f"8Tx{raw_tx_hash}"
 
         block_height = 168492000 + len(self._entries) * 8
-        explorer_url = f"https://testnet.nearblocks.io/txns/{tx_hash}"
+        base_explorer = "https://nearblocks.io" if settings.NEAR_NETWORK == "mainnet" else "https://testnet.nearblocks.io"
+        explorer_url = f"{base_explorer}/txns/{tx_hash}"
 
         entry = AuditEntry(
             id=action_id,
