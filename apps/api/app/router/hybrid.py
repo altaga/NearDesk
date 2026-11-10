@@ -5,12 +5,22 @@ from app.near_ai.budget import budget_manager
 
 logger = logging.getLogger("neardesk.router")
 
-# Keywords that can be fulfilled immediately by local tools or deterministic handlers
+# Keywords that can be fulfilled immediately by local tools or deterministic handlers (Bilingual EN/ES)
 LOCAL_INTENTS = [
-    "metrics", "cpu", "gpu", "ram", "memory", "temperature", "temp", "status",
-    "budget", "spent", "balance", "cost", "tokens",
+    # Hardware & Telemetry
+    "metrics", "cpu", "gpu", "ram", "memory", "temperature", "temp", "status", "hardware",
+    "metricas", "métricas", "temperatura", "memoria", "rendimiento",
+    # Budget & Ledger
+    "budget", "spent", "balance", "cost", "tokens", "funds",
+    "presupuesto", "saldo", "gastado", "costo", "tokens", "fondos",
+    # Chain Signatures (MPC)
     "derive", "address", "mpc", "solana address", "ethereum address", "bitcoin address",
-    "quote", "swap rate", "attestation", "tee"
+    "deriva", "dirección", "direccion", "wallet", "billetera",
+    # NEAR Intents (1Click Swaps)
+    "quote", "swap rate", "swap", "defuse", "exchange",
+    "cotiza", "cotizacion", "cotización", "cambiar", "intercambio", "tasa",
+    # TEE Attestation
+    "attestation", "tee", "atestación", "atestacion"
 ]
 
 class HybridRouter:
