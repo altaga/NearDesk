@@ -1,33 +1,36 @@
 # NearDesk 🟢
 
 > **The Sovereign Edge AI Operator Desk for NEAR Protocol**  
-> *Hardware-anchored agents, decentralized MPC Chain Signatures, 1Click cross-chain intents, and verifiable confidential AI.*
+> *Hardware-anchored agents, decentralized MPC Chain Signatures, 1Click cross-chain intents, Scoped FunctionCall fencing, and verifiable on-chain audit trails.*
 
 ---
 
 ## 🚀 Overview
 
-**NearDesk** is an edge-native operator station designed to run directly on physical hardware (such as the **NVIDIA Jetson Orin / Nano**) or in a containerized edge environment.
+**NearDesk** is an edge-native operator station designed to run directly on physical hardware (such as the **NVIDIA Jetson Orin / Nano**) or in a local edge environment.
 
-By fusing **local private compute** on physical edge nodes with **NEAR Protocol's Chain Abstraction stack**, NearDesk delivers true **User-Owned AI**:
-- **Sovereign Local Execution:** Shell commands, hardware diagnostics, and sensitive data processing stay strictly private on the Jetson edge node.
+By fusing **local private compute** on physical edge nodes with **NEAR Protocol's Chain Abstraction & Agentic Stack**, NearDesk delivers true **User-Owned AI**:
+- **Sovereign Local Execution:** Shell commands, hardware diagnostics, and sensitive data processing stay strictly private on the edge node.
 - **NEAR Chain Signatures (MPC):** A single NEAR account controls and signs transactions natively for **Bitcoin, Ethereum, Solana, and Base** without cross-chain bridges or exposed private keys.
 - **NEAR Intents (1Click Cross-Chain Swaps):** The agent autonomously sources quotes and initiates swaps via the Defuse solver network.
+- **Scoped FunctionCall Key Fencing:** Mathematical boundary preventing the agent from transferring master account funds or deleting contracts under prompt injection.
+- **On-Chain Verifiable Audit Trail:** Every approved action and signature is hashed and permanently anchored into NEAR testnet blocks.
+- **Agent Economy & Peer Micropayments:** Other AI agents pay our node micro-fees in NEAR to execute private edge computations and attestation proofs.
 - **Confidential Computing (TEE):** Cloud reasoning requests routed to NEAR AI Cloud (`cloud-api.near.ai`) run inside hardware-verified Intel TDX and NVIDIA Confidential Computing enclaves.
 - **Human-in-the-Loop Approval Gates:** No shell commands, file modifications, or financial signatures can be executed without physical operator authorization in the UI.
-- **Strict Budget Ceiling:** Hard-enforced financial guardrails (metered down to the fraction of a cent) to prevent runaway cloud inference costs.
+- **Strict Budget Ceiling:** Hard-enforced financial guardrails (metered down to the fraction of a cent) respecting a **strict \$10.00 USD budget**.
 
 ---
 
-## 🏆 NEAR Hackathon Tracks
+## 🏆 NEAR Hackathon Tracks Addressed
 
-NearDesk is built to compete at the intersection of three core tracks:
+NearDesk is built to compete as a flagship entry across three core tracks:
 
 | Track | Why NearDesk is Built for This |
 |---|---|
-| **Privacy & Private AI** | Edge-first deployment on NVIDIA Jetson. Private data and terminal commands never touch the public internet. Cloud inference utilizes verifiable TEE hardware attestation. |
-| **AI Security & Defense** | Strict Approval Gates and FunctionCall key fences ensure the agent cannot execute destructive shell actions or drain wallets without operator consent. |
-| **Agent Economy & Unstoppable DeFi** | The agent holds its own multi-chain balances via NEAR Chain Signatures (BTC/ETH/SOL) and participates in the 1Click Defuse solver market. |
+| **🥇 1. Privacy & Private AI** | Edge-first deployment on NVIDIA Jetson. Private data and terminal commands never touch the public internet. Cloud inference utilizes verifiable TEE hardware attestation. |
+| **🥈 2. AI Security & Defense** | Scoped FunctionCall keys restrict the agent's gas allowance on-chain. Visual Approval Gates ensure rogue or jailbroken prompts cannot execute destructive actions without operator consent. |
+| **🥉 3. Agent Economy & Unstoppable DeFi** | The edge node holds multi-chain balances (BTC/ETH/SOL) via NEAR Chain Signatures, performs 1Click Intent swaps, and earns NEAR by providing paid edge services to other agents. |
 
 ---
 
@@ -36,24 +39,29 @@ NearDesk is built to compete at the intersection of three core tracks:
 ```mermaid
 flowchart TD
     subgraph OperatorDesk["NearDesk Operator Console (Next.js 14)"]
-        UI["Swiss-Engineered Dark UI"]
-        TelemetryCard["Jetson Hardware Telemetry"]
-        CSCard["NEAR Chain Signatures Console"]
-        IntentCard["1Click Intents Swap Engine"]
+        UI["Swiss-Engineered Dark UI (#00EC97)"]
+        TelemetryBar["Jetson Hardware & Thermal Telemetry"]
+        CSCard["NEAR Chain Signatures Console (BTC/ETH/SOL)"]
+        IntentCard["1Click Intents Swap Engine (Defuse)"]
+        FencingCard["Scoped FunctionCall Key Fencing"]
+        AuditCard["On-Chain Verifiable Audit Trail"]
+        EconomyCard["Agent Economy Peer Micropayments"]
         GateModal["Human-in-the-Loop Approval Gate"]
     end
 
-    subgraph EdgeNode["Physical Edge Station (NVIDIA Jetson / Host)"]
+    subgraph EdgeNode["Physical Edge Station (NVIDIA Jetson / Host Node)"]
         FastAPI["NearDesk Core API (Port 8000)"]
         OllamaLocal["Local Edge LLM (Private & Sovereign)"]
         BudgetGuard["Budget Guardrail (Strict $10.00 Limit)"]
-        LocalTools["Shell / File / System Drivers"]
+        LocalTools["Shell / File / Hardware Drivers"]
     end
 
     subgraph NEARProtocol["NEAR Protocol & Decentralized Stack"]
         MPC["v1.signer (MPC Multi-Chain Signer)"]
         Intents["NEAR Intents / Defuse Solver Network"]
         NEARCloud["NEAR AI Cloud (TEE Verifiable Ingestion)"]
+        AuditLedger["NEAR On-Chain Blocks (Audit Trail)"]
+        AgentRegistry["NEAR Agent Registry & DID"]
     end
 
     UI <--> FastAPI
@@ -62,6 +70,8 @@ flowchart TD
     BudgetGuard --> NEARCloud
     FastAPI --> MPC
     FastAPI --> Intents
+    FastAPI --> AuditLedger
+    FastAPI --> AgentRegistry
     LocalTools -.-> GateModal
 ```
 
@@ -105,7 +115,14 @@ npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) to access the operator console.
 
-### 5. (Optional) Run the Jetson Board Emulator
+### 5. Run API Test Suite
+```bash
+cd apps/api
+python -m pytest tests -q
+```
+*(7 tests passing: Telemetry, Multi-Chain Derivations, Budget Ceiling, Approval Gates, FunctionCall Key Fencing, Audit Trail, Agent Economy).*
+
+### 6. (Optional) Run the Jetson Board Emulator
 Simulate a physical Jetson Orin board inside Docker:
 ```bash
 npm run emu:up
@@ -127,5 +144,7 @@ npm run emu:up
 ## 🔒 Security & Guardrails
 
 - **Zero Unsigned Operations:** All foreign transactions are signed through decentralized MPC nodes.
+- **Mathematical Key Fencing:** Agent uses a Scoped FunctionCall Access Key limited to 2.5 NEAR gas allowance and restricted contracts (`v1.signer`, `intents.near`).
 - **Physical Approval Gates:** High-risk actions (executing shell scripts or broadcasting cross-chain swaps) generate interactive tickets that require manual confirmation.
-- **Budget Lock:** Cloud calls are instantly frozen once the $10 budget threshold is reached, falling back to 100% local edge processing.
+- **Cryptographic Audit Trail:** Approved operations generate SHA-256 receipts permanently anchored on NEAR testnet.
+- **Budget Lock:** Cloud calls are instantly frozen once the \$10 budget threshold is reached, falling back to 100% local edge processing.

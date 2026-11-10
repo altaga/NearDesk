@@ -58,6 +58,20 @@ class ApprovalManager:
         req.resolved_at = time.time()
         req.resolved_by = resolved_by
         logger.info(f"GUARDRAIL: Request {request_id} was {req.status} by {resolved_by}")
+
+        if approved:
+            try:
+                from app.near_chain.audit import audit_trail
+                audit_trail.record_action(
+                    action_id=req.id,
+                    action_type=req.action_type,
+                    title=req.title,
+                    operator=resolved_by,
+                    payload=req.payload
+                )
+            except Exception as e:
+                logger.error(f"Failed to record audit trail entry: {e}")
+
         return req
 
 approval_manager = ApprovalManager()

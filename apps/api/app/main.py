@@ -8,14 +8,18 @@ from app.board.telemetry import telemetry_collector
 from app.near_ai.budget import budget_manager
 from app.near_ai.client import near_ai_client
 from app.near_chain.mpc import chain_signatures
+from app.near_chain.keys import agent_keys
+from app.near_chain.audit import audit_trail
+from app.near_agent.identity import agent_identity
+from app.near_agent.services import agent_economy
 from app.near_intents.swap import near_intents
 from app.guardrails.approval import approval_manager
 from app.chat.engine import chat_engine
 
 app = FastAPI(
     title="NearDesk Sovereign Operator API",
-    description="Edge AI & NEAR Protocol Agent Node (Chain Signatures, Intents, TEE Verifiable Cloud)",
-    version="0.1.0"
+    description="Edge AI & NEAR Protocol Agent Node (Chain Signatures, Intents, TEE Verifiable Cloud, Agent Registry)",
+    version="0.2.0"
 )
 
 app.add_middleware(
@@ -51,6 +55,12 @@ class ResolveApprovalRequest(BaseModel):
 class TerminalCommandRequest(BaseModel):
     command: str
 
+class SubmitPeerTaskRequest(BaseModel):
+    client_agent: str
+    service_type: str
+    payment_near: float = 0.05
+    params: Dict[str, Any] = {}
+
 # -------------------------------------------------------------
 # Routes
 # -------------------------------------------------------------
@@ -59,9 +69,11 @@ async def health():
     return {
         "status": "healthy",
         "service": "NearDesk API",
+        "version": "0.2.0",
         "llm_mode": settings.LLM_MODE,
         "near_network": settings.NEAR_NETWORK,
-        "jetson_detected": telemetry_collector.is_jetson
+        "jetson_detected": telemetry_collector.is_jetson,
+        "fencing": "FunctionCall Key Enforced"
     }
 
 @app.get("/v1/telemetry")
@@ -102,6 +114,40 @@ async def intent_quote(req: IntentQuoteRequest):
         amount_in=req.amount_in,
         slippage_tolerance_bps=req.slippage_bps
     )
+
+# --- ADVANCED NEAR AGENTIC FEATURES ---
+
+@app.get("/v1/near/fencing")
+async def get_fencing():
+    """Status of Scoped FunctionCall Keys and wallet gas allowance guardrails."""
+    return agent_keys.get_active_fencing_status()
+
+@app.get("/v1/near/audit")
+async def get_audit_trail():
+    """Immutable on-chain verifiable audit log of all approved hardware & financial operations."""
+    return audit_trail.get_entries()
+
+@app.get("/v1/near/agent/profile")
+async def get_agent_profile():
+    """NEAR Agent Registry & DID identity profile."""
+    return agent_identity.get_agent_profile()
+
+@app.get("/v1/near/agent/economy")
+async def get_agent_economy():
+    """Earnings, fulfilled tasks, and active services in the NEAR Agent Economy."""
+    return agent_economy.get_economy_metrics()
+
+@app.post("/v1/near/agent/task")
+async def submit_peer_task(req: SubmitPeerTaskRequest):
+    """Process a paid edge task submitted by a peer NEAR agent with micro-payment."""
+    return agent_economy.submit_task(
+        client_agent=req.client_agent,
+        service_type=req.service_type,
+        payment_near=req.payment_near,
+        params=req.params
+    )
+
+# --- CHAT & APPROVAL GATES ---
 
 @app.post("/v1/chat")
 async def chat(req: ChatRequest):
