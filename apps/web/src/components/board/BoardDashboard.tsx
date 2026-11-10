@@ -6,8 +6,27 @@ import { fetchBoardHealth, fetchBoardInfo, fetchBoardProcesses } from "../../lib
 import { BoardHealthDetail, BoardInfoDetail, ProcessItem } from "../../lib/types";
 
 export const BoardDashboard: React.FC = () => {
-  const [health, setHealth] = useState<BoardHealthDetail | null>(null);
-  const [info, setInfo] = useState<BoardInfoDetail | null>(null);
+  const [health, setHealth] = useState<BoardHealthDetail | null>({
+    ok: true,
+    cpu: { percent: 18.5, cores: 8, per_core: [24, 12, 19, 8, 32, 15, 11, 22] },
+    ram: { total_mb: 16384, used_mb: 6144, percent: 37.5, swap_used_mb: 512, swap_total_mb: 8192 },
+    disk: { total_gb: 128, used_gb: 34.2, percent: 26.7 },
+    thermals: { cpu_temp_c: 44.0, gpu_temp_c: 46.5, thermal_status: "NORMAL" },
+    power: { watts: 12.8, mode: "15W_DEFAULT" },
+    gpu: { device: "NVIDIA Tegra Orin GPU", load_percent: 28.4, temperature_c: 46.5, power_watts: 12.8 },
+  });
+  const [info, setInfo] = useState<BoardInfoDetail | null>({
+    ok: true,
+    hostname: "jetson-orin-station-01",
+    platform: "Linux 5.10.104-tegra aarch64",
+    architecture: "aarch64",
+    python: "3.11.8",
+    is_jetson: true,
+    hardware_model: "NVIDIA Jetson Orin Nano / NX",
+    jetpack_version: "JetPack 5.1.2 (L4T R35.4.1)",
+    power_mode: "15W_DEFAULT",
+    uptime_seconds: 48200,
+  });
   const [processes, setProcesses] = useState<ProcessItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 

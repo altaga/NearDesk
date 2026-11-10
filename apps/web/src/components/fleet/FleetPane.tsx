@@ -11,7 +11,32 @@ interface FleetPaneProps {
 }
 
 export const FleetPane: React.FC<FleetPaneProps> = ({ onOpenPairing, account }) => {
-  const [nodes, setNodes] = useState<DiscoveredNode[]>([]);
+  const [nodes, setNodes] = useState<DiscoveredNode[]>([
+    {
+      label: "Local Edge Station (Dev Host)",
+      url: "http://127.0.0.1:8000",
+      type: "local_node",
+      reachable: true,
+      detected_hardware: "NVIDIA Jetson Platform",
+      status: "online",
+    },
+    {
+      label: "Jetson USB Gadget Link",
+      url: "http://192.168.55.1:8800",
+      type: "usb_gadget",
+      reachable: false,
+      detected_hardware: "Jetson Orin (USB Gadget)",
+      status: "standby_ready",
+    },
+    {
+      label: "Docker Board Emulator 01",
+      url: "http://127.0.0.1:18101",
+      type: "docker_emu",
+      reachable: false,
+      detected_hardware: "Orin Nano Container",
+      status: "standby_ready",
+    },
+  ]);
   const [pairingStatus, setPairingStatus] = useState<BoardPairingStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 

@@ -71,3 +71,4 @@ data/
 logs/
 *.log
 .desk/
+operator_screenshots/
