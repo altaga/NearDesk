@@ -11,6 +11,7 @@ import { AuditTrailCard } from "../components/AuditTrailCard";
 import { AgentEconomyCard } from "../components/AgentEconomyCard";
 import { TerminalDrawer } from "../components/TerminalDrawer";
 import { ApprovalModal } from "../components/ApprovalModal";
+import { OnboardingWizard } from "../components/OnboardingWizard";
 import { fetchTelemetry, fetchBudget, fetchApprovals, fetchOnChainAccount } from "../lib/api";
 import { TelemetryData, BudgetStatus, ApprovalRequest, NearAccountStatus } from "../lib/types";
 import { KeyRound, ShieldCheck, History, Coins } from "lucide-react";
@@ -23,6 +24,7 @@ export default function DeskPage() {
   const [account, setAccount] = useState<NearAccountStatus | null>(null);
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [isApprovalOpen, setIsApprovalOpen] = useState<boolean>(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<RightPanelTab>("chain_intents");
 
   const refreshState = async () => {
@@ -53,6 +55,7 @@ export default function DeskPage() {
         account={account}
         pendingApprovalsCount={approvals.length}
         onOpenApprovals={() => setIsApprovalOpen(true)}
+        onOpenOnboarding={() => setIsOnboardingOpen(true)}
       />
 
       {/* 2. System & RPC Telemetry */}
@@ -153,6 +156,14 @@ export default function DeskPage() {
         onClose={() => setIsApprovalOpen(false)}
         requests={approvals}
         onRefresh={refreshState}
+      />
+
+      {/* 6. Hardware Discovery & Onboarding Wizard */}
+      <OnboardingWizard
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        account={account}
+        onPairingComplete={refreshState}
       />
     </div>
   );

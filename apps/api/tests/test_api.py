@@ -74,3 +74,18 @@ def test_agent_economy():
     eco = agent_economy.get_economy_metrics()
     assert eco["total_earned_near"] > 0
     assert len(eco["recent_tasks"]) >= 3
+
+def test_board_pairing_and_discovery():
+    from app.board.pairing import pairing_manager
+    status = pairing_manager.get_status()
+    assert "board_id" in status
+    assert status["paired"] is True
+
+    # Test claiming board
+    claimed = pairing_manager.claim_board(
+        board_id="jetson-orin-test-01",
+        ip_address="192.168.55.1",
+        near_account="test.near"
+    )
+    assert claimed["board_id"] == "jetson-orin-test-01"
+    assert claimed["near_owner"] == "test.near"

@@ -10,6 +10,7 @@ interface DeskHeaderProps {
   account: NearAccountStatus | null;
   pendingApprovalsCount: number;
   onOpenApprovals: () => void;
+  onOpenOnboarding: () => void;
 }
 
 export const DeskHeader: React.FC<DeskHeaderProps> = ({
@@ -18,6 +19,7 @@ export const DeskHeader: React.FC<DeskHeaderProps> = ({
   account,
   pendingApprovalsCount,
   onOpenApprovals,
+  onOpenOnboarding,
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const spent = budget?.total_spent_usd ?? 0.0;
@@ -63,6 +65,13 @@ export const DeskHeader: React.FC<DeskHeaderProps> = ({
             <Lock className="w-3.5 h-3.5 text-near-green" />
             <span>NEAR MPC Signer</span>
           </div>
+
+          <button
+            onClick={onOpenOnboarding}
+            className="flex items-center gap-1.5 text-xs text-near-textSecondary hover:text-near-green bg-near-black border border-near-border px-2.5 py-1 rounded transition-colors"
+          >
+            <span>Hardware Setup</span>
+          </button>
         </div>
       </div>
 

@@ -1,10 +1,12 @@
-from fastapi import FastAPI, HTTPException, Body, Request
+from fastapi import FastAPI, HTTPException, Body, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 
 from app.config import settings
 from app.board.telemetry import telemetry_collector
+from app.board.ws_manager import board_ws_manager
+from app.board.pairing import pairing_manager
 from app.near_ai.budget import budget_manager
 from app.near_ai.client import near_ai_client
 from app.near_chain.mpc import chain_signatures
@@ -55,6 +57,11 @@ class ResolveApprovalRequest(BaseModel):
 
 class TerminalCommandRequest(BaseModel):
     command: str
+
+class ClaimBoardRequest(BaseModel):
+    board_id: str
+    ip_address: str = "192.168.55.1"
+    near_account: Optional[str] = None
 
 class SubmitPeerTaskRequest(BaseModel):
     client_agent: str
@@ -204,3 +211,52 @@ async def submit_terminal_command(req: TerminalCommandRequest):
         "status": "pending_operator_approval",
         "command": req.command
     }
+
+# -------------------------------------------------------------
+# WebSocket Relay & Jetson Board Pairing Endpoints
+# -------------------------------------------------------------
+@app.websocket("/v1/agent/ws")
+async def agent_websocket(websocket: WebSocket, board_id: str = "jetson-orin-station-01"):
+    """Bidirectional WebSocket connection for remote Jetson edge nodes."""
+    await board_ws_manager.register_board(board_id, websocket)
+    try:
+        while True:
+            raw_data = await websocket.receive_text()
+            try:
+                data = json.loads(raw_data)
+                msg_type = data.get("type")
+                if msg_type == "telemetry_frame":
+                    board_ws_manager.update_telemetry(board_id, data)
+                elif msg_type == "command_result":
+                    cmd_id = data.get("cmd_id")
+                    output = data.get("output", {})
+                    board_ws_manager.resolve_command(cmd_id, output)
+            except Exception:
+                pass
+    except WebSocketDisconnect:
+        board_ws_manager.unregister_board(board_id)
+
+@app.get("/v1/pair/status")
+async def get_pairing_status():
+    """Current hardware pairing state of the station."""
+    return pairing_manager.get_status()
+
+@app.get("/v1/pair/discover")
+async def discover_nodes():
+    """Scan USB Gadget link (192.168.55.1) and LAN for connectable Jetson hardware."""
+    return await pairing_manager.discover_nodes()
+
+@app.post("/v1/pair/claim")
+async def claim_board(req: ClaimBoardRequest):
+    """Claim and provision a physical Jetson board with the operator's NEAR DID."""
+    near_acc = req.near_account or settings.NEAR_ACCOUNT_ID or "01f72953344b853c9cf949217997e481bd04a1a33bea8e36060abf80e0118e7c"
+    return pairing_manager.claim_board(
+        board_id=req.board_id,
+        ip_address=req.ip_address,
+        near_account=near_acc
+    )
+
+@app.get("/v1/agent/remote_nodes")
+async def list_remote_nodes():
+    """List active live WebSocket connected Jetson boards."""
+    return board_ws_manager.get_connected_boards()
