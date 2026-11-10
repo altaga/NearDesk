@@ -1,7 +1,8 @@
-from fastapi import FastAPI, HTTPException, Body, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Body, Request, Response, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
+import json
 
 from app.config import settings
 from app.board.telemetry import telemetry_collector
@@ -19,10 +20,14 @@ from app.near_agent.did import agent_did
 from app.near_intents.swap import near_intents
 from app.guardrails.approval import approval_manager
 from app.chat.engine import chat_engine
+from app.edge.files import list_files as fs_list, read_file as fs_read, write_file as fs_write
+from app.browser.runtime import browser_runtime
+from app.jobs.manager import jobs_manager
+from app.memory.manager import memory_manager
 
 app = FastAPI(
     title="NearDesk Sovereign Operator API",
-    description="Edge AI & NEAR Protocol Agent Node (Chain Signatures, Intents, TEE Verifiable Cloud, Agent Registry)",
+    description="Edge AI & NEAR Protocol Agent Node (Chain Signatures, Intents, TEE Verifiable Cloud, Machine Desk Surface)",
     version="0.2.0"
 )
 
@@ -73,8 +78,26 @@ class SubmitPeerTaskRequest(BaseModel):
 class ResolveDIDRequest(BaseModel):
     did_or_account: str
 
+class WriteFileRequest(BaseModel):
+    path: str
+    content: str
+
+class BrowserActionRequest(BaseModel):
+    action: str
+    url: Optional[str] = None
+    selector: Optional[str] = None
+    text: Optional[str] = None
+
+class EnqueueJobRequest(BaseModel):
+    name: str
+    kind: str = "custom_task"
+    details: str = ""
+
+class SaveMemoryRequest(BaseModel):
+    content: str
+
 # -------------------------------------------------------------
-# Routes
+# System & Telemetry Routes
 # -------------------------------------------------------------
 @app.get("/v1/health")
 async def health():
@@ -93,11 +116,111 @@ async def get_telemetry():
     """Live CPU, GPU, RAM, temperature, power telemetry."""
     return telemetry_collector.get_metrics()
 
+@app.get("/v1/board/info")
+async def get_board_info():
+    """Hardware platform, Jetson Tegra model, kernel architecture, uptime."""
+    return telemetry_collector.get_board_info()
+
+@app.get("/v1/board/health")
+async def get_board_health():
+    """Deep hardware health (multi-core CPU, swap, thermals, power mode)."""
+    return telemetry_collector.get_board_health()
+
+@app.get("/v1/board/processes")
+async def get_board_processes(limit: int = 15):
+    """List of active running processes on the edge station."""
+    return telemetry_collector.get_processes(limit=limit)
+
 @app.get("/v1/budget")
 async def get_budget():
     """Real-time USD budget status against the strict $10.00 ceiling."""
     return budget_manager.get_status()
 
+# -------------------------------------------------------------
+# Machine: Filesystem Workspace Routes
+# -------------------------------------------------------------
+@app.get("/v1/edge/files")
+async def list_files_endpoint(path: str = Query(default=".")):
+    """List files and folders in the operator workspace."""
+    return fs_list(path)
+
+@app.get("/v1/edge/files/read")
+async def read_file_endpoint(path: str = Query(...)):
+    """Read file content under desk root."""
+    res = fs_read(path)
+    if not res.get("ok"):
+        raise HTTPException(status_code=404, detail=res.get("error", "File not found"))
+    return res
+
+@app.post("/v1/edge/files/write")
+async def write_file_endpoint(req: WriteFileRequest):
+    """Write content to workspace file."""
+    return fs_write(req.path, req.content)
+
+# -------------------------------------------------------------
+# Machine: Headless Browser Automation Routes
+# -------------------------------------------------------------
+@app.get("/v1/browser/status")
+async def browser_status():
+    """Get active headless Chromium state."""
+    return browser_runtime.get_status()
+
+@app.post("/v1/browser/action")
+async def browser_action(req: BrowserActionRequest):
+    """Execute navigation or interaction in headless Chromium on the board."""
+    return await browser_runtime.execute_action(
+        action=req.action,
+        url=req.url,
+        selector=req.selector,
+        text=req.text
+    )
+
+@app.get("/v1/browser/preview")
+async def browser_preview():
+    """Get latest browser screenshot image."""
+    img_bytes = browser_runtime.get_preview_image()
+    if img_bytes:
+        return Response(content=img_bytes, media_type="image/png")
+    # Return 1x1 png if no screenshot available yet
+    return Response(content=b"", media_type="image/png")
+
+# -------------------------------------------------------------
+# Machine: Background Jobs Supervisor Routes
+# -------------------------------------------------------------
+@app.get("/v1/jobs")
+async def list_jobs():
+    """List durable background jobs and system daemons on the board."""
+    return {"jobs": jobs_manager.list_jobs()}
+
+@app.post("/v1/jobs/enqueue")
+async def enqueue_job(req: EnqueueJobRequest):
+    """Enqueue a durable background agent or job."""
+    return jobs_manager.enqueue_job(req.name, req.kind, req.details)
+
+@app.post("/v1/jobs/{job_id}/cancel")
+async def cancel_job(job_id: str):
+    """Stop a running edge daemon or task."""
+    ok = jobs_manager.cancel_job(job_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {"ok": True, "job_id": job_id, "status": "stopped"}
+
+# -------------------------------------------------------------
+# Library & Memory Routes
+# -------------------------------------------------------------
+@app.get("/v1/memory")
+async def get_memory():
+    """Retrieve persistent sovereign memory for the operator agent."""
+    return memory_manager.get_memory()
+
+@app.post("/v1/memory")
+async def save_memory(req: SaveMemoryRequest):
+    """Save persistent instructions and operator preferences."""
+    return memory_manager.save_memory(req.content)
+
+# -------------------------------------------------------------
+# NEAR Protocol & Sovereign Agent Routes
+# -------------------------------------------------------------
 @app.get("/v1/near/attestation")
 async def get_attestation():
     """Cryptographic TEE hardware attestation report from NEAR AI Cloud."""
@@ -139,8 +262,6 @@ async def broadcast_test():
         action_title="Manual Operator On-Chain Ping",
         payload_hash="0xpingtest"
     )
-
-# --- ADVANCED NEAR AGENTIC FEATURES ---
 
 @app.get("/v1/near/fencing")
 async def get_fencing():
@@ -187,8 +308,9 @@ async def submit_peer_task(req: SubmitPeerTaskRequest):
         params=req.params
     )
 
-# --- CHAT & APPROVAL GATES ---
-
+# -------------------------------------------------------------
+# Chat & Approval Gates
+# -------------------------------------------------------------
 @app.post("/v1/chat")
 async def chat(req: ChatRequest):
     """Chat with Nova, the NearDesk Sovereign Operator."""
