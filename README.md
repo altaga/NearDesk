@@ -11,7 +11,7 @@
 > **The Sovereign Edge AI Operator Desk for NEAR Protocol**  
 > *Hardware-anchored agents, decentralized MPC Chain Signatures, 1Click cross-chain intents, Scoped FunctionCall fencing, and verifiable on-chain audit trails.*  
 >  
-> 🌐 **Live Production Console:** [https://neardesk-sandy.vercel.app](https://neardesk-sandy.vercel.app)
+> 🌐 **Live Production Console:** [https://neardesk.vercel.app](https://neardesk.vercel.app)
 
 ---
 
