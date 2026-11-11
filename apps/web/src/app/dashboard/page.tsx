@@ -107,9 +107,13 @@ export default function DashboardPage() {
           <Link
             href="/"
             title="NearDesk Home Presentation"
-            className="w-8 h-8 rounded bg-[#101216] hover:bg-[#161920] border border-[#1E222A] flex items-center justify-center text-[#00EC97] font-bold text-xs tracking-tighter shadow-sm transition-colors"
+            className="w-8 h-8 rounded bg-[#101216] hover:bg-[#161920] border border-[#1E222A] flex items-center justify-center p-1 shadow-sm transition-colors"
           >
-            ND
+            <img
+              src="/logo.png"
+              alt="NearDesk Logo"
+              className="w-full h-full object-contain"
+            />
           </Link>
 
           <div className="w-6 h-[1px] bg-[#1E222A]" />

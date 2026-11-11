@@ -1,3 +1,7 @@
+<p align="left">
+  <img src="./logo.png" alt="NearDesk Logo" width="88" />
+</p>
+
 # NearDesk 🟢
 
 > **The Sovereign Edge AI Operator Desk for NEAR Protocol**  

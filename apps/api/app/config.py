@@ -1,11 +1,22 @@
+import os
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from typing import Literal
 
-# Find repository root secrets.env if present
+# Find repository root secrets.env or container mount if present
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-SECRETS_FILE = REPO_ROOT / "secrets.env"
+
+candidate_secrets = [
+    Path(os.environ.get("SECRETS_FILE", "")) if os.environ.get("SECRETS_FILE") else None,
+    Path("/home/jetson/secrets.env"),
+    Path("/opt/neardesk/secrets.env"),
+    Path("/app/secrets.env"),
+    REPO_ROOT / "secrets.env",
+    Path(".env")
+]
+
+SECRETS_FILE = next((p for p in candidate_secrets if p is not None and p.exists() and p.is_file()), Path(".env"))
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(

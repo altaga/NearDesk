@@ -10,9 +10,9 @@
     "dev:api": "cd apps/api && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
     "dev:agent": "cd apps/board-agent && python -m neardesk_agent",
     "test:api": "cd apps/api && python -m pytest tests -q",
-    "emu:up": "docker compose -f apps/board-emu/docker-compose.yml up --build -d",
+    "emu:up": "docker compose -f apps/board-emu/docker-compose.yml up --build -d jetson-nano",
     "emu:down": "docker compose -f apps/board-emu/docker-compose.yml down",
-    "emu:logs": "docker compose -f apps/board-emu/docker-compose.yml logs -f"
+    "emu:logs": "docker compose -f apps/board-emu/docker-compose.yml logs -f jetson-nano"
   },
   "keywords": [
     "near-protocol",

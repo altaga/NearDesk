@@ -119,7 +119,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     key={idx}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setSelectedNode(node.url)}
+                    onClick={() => {
+                      setSelectedNode(node.url);
+                      if (node.url.includes("18101")) setBoardId("jetson-orin-emu-01");
+                      else if (node.url.includes("18102")) setBoardId("jetson-orin-emu-02");
+                      else if (node.url.includes("18103")) setBoardId("jetson-orin-emu-03");
+                      else if (node.url.includes("192.168.55.1")) setBoardId("jetson-orin-station-01");
+                    }}
                     className={`border rounded p-2.5 flex items-center justify-between cursor-pointer transition-colors ${
                       isSelected
                         ? "bg-[#0A0C0F] border-[#00EC97]/60 text-[#EDEDEF]"
@@ -170,10 +176,10 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <div className="bg-[#090A0D] border border-[#1A1D24] rounded p-3 flex flex-col gap-1.5">
               <span className="text-[10px] uppercase text-[#6B7280] tracking-wider">Sovereign Account Identifier</span>
               <div className="bg-[#101216] p-2 rounded text-[#00EC97] break-all text-[11px] border border-[#1E222A] font-medium">
-                {account?.account_id || "01f72953344b853c9cf949217997e481bd04a1a33bea8e36060abf80e0118e7c"}
+                {account?.account_id || "a69d770c221f3f4b9ed0dc913a201940a355deeceb112a55b340a5cf30ee1ed6"}
               </div>
               <div className="flex items-center justify-between text-[10px] text-[#7E8492] pt-1">
-                <span>Network: <span className="text-[#EDEDEF]">{account?.network.toUpperCase() || "MAINNET"}</span></span>
+                <span>Network: <span className="text-[#EDEDEF]">{account?.network ? account.network.toUpperCase() : "TESTNET"}</span></span>
                 <span className="text-[#00EC97] flex items-center gap-1">
                   <Check className="w-3 h-3" /> Cryptographically Bound
                 </span>

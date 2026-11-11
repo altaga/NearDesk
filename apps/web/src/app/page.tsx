@@ -33,8 +33,12 @@ export default function PresentationPage() {
       {/* 1. Header / Navbar */}
       <header className="sticky top-0 z-40 w-full px-6 py-4 flex items-center justify-between border-b border-[#14171E] bg-[#07080A]/85 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-[#10131A] border border-[#1E232E] flex items-center justify-center text-[#00EC97] font-bold text-xs tracking-tighter shadow-sm">
-            ND
+          <div className="w-8 h-8 rounded bg-[#10131A] border border-[#1E232E] flex items-center justify-center p-1 shadow-sm">
+            <img
+              src="/logo.png"
+              alt="NearDesk Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold tracking-tight text-[#EDEDEF]">

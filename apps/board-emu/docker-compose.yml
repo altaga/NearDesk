@@ -1,15 +1,91 @@
 version: '3.8'
 
+# =============================================================================
+# NearDesk NVIDIA Jetson Nano Sovereign Test Board (Docker Environment)
+# =============================================================================
+# Emulates a physical NVIDIA Jetson Nano Developer Kit (4GB, L4T R32.7.1)
+# Strict memory ceiling (2048MB limit) to mirror low-resource physical edge boards.
+#
+# Usage:
+#   npm run emu:up      # Boot Jetson Nano test board container
+#   npm run emu:logs    # Follow logs
+#   npm run emu:down    # Stop container
+#
+# Ports:
+#   127.0.0.1:8000  -> Direct Core API for NearDesk Web Desk (/v1/*)
+#   127.0.0.1:18101 -> Hardware Discovery & Pairing Wizard bridge (/setup, /v1/pair/*)
+# =============================================================================
+
+x-board: &board
+  build:
+    context: ../..
+    dockerfile: apps/board-emu/Dockerfile
+  image: neardesk-jetson-nano:local
+  restart: unless-stopped
+  # Resource safeguards: strictly controlled memory and CPU allocation
+  deploy:
+    resources:
+      limits:
+        cpus: '2.0'
+        memory: 2048M
+      reservations:
+        memory: 512M
+  mem_limit: 2048m
+  mem_reservation: 512m
+  memswap_limit: 3072m
+  cpus: 2.0
+  environment: &board-env
+    BOARD_TYPE: jetson_nano
+    NEARDESK_BOARD_ID: jetson-nano-board-01
+    NEARDESK_BOARD_EMU: "true"
+    NEAR_NETWORK: testnet
+    NEAR_RPC_URL: https://rpc.testnet.near.org
+    LLM_MODE: near_cloud
+    MALLOC_ARENA_MAX: "2"
+    HOST_PORT: "8000"
+    DESK_ROOT: /home/jetson/workspace
+    DATA_DIR: /home/jetson/data
+    STATE_DIR: /home/jetson/.config/neardesk
+    # Pull optional secrets from host environment if set
+    NEARAI_API_KEY: ${NEARAI_API_KEY:-}
+    NEARAI_BASE_URL: ${NEARAI_BASE_URL:-https://cloud-api.near.ai/v1}
+    NEAR_MAX_BUDGET_USD: ${NEAR_MAX_BUDGET_USD:-10.0}
+    NEAR_ACCOUNT_ID: ${NEAR_ACCOUNT_ID:-a69d770c221f3f4b9ed0dc913a201940a355deeceb112a55b340a5cf30ee1ed6}
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
 services:
-  board-emu:
-    build:
-      context: ../../
-      dockerfile: apps/board-emu/Dockerfile
-    container_name: neardesk-board-emu
-    restart: unless-stopped
-    environment:
-      - NEARDESK_API_URL=http://host.docker.internal:8000
-      - NEARDESK_BOARD_ID=jetson-orin-emulator-01
-      - HEARTBEAT_INTERVAL=3
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+  # Primary Jetson Nano Test Board
+  jetson-nano:
+    <<: *board
+    hostname: jetson-nano
+    container_name: neardesk-jetson-nano
+    ports:
+      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:18101:8000"
+    volumes:
+      - nano-config:/home/jetson/.config/neardesk
+      - nano-data:/home/jetson/data
+      - nano-workspace:/home/jetson/workspace
+      # Optional: pass repository root secrets.env if it exists on host
+      - ../../secrets.env:/home/jetson/secrets.env:ro
+
+  # Backward compatibility alias for legacy scripts
+  emu-1:
+    <<: *board
+    hostname: emu-1
+    container_name: neardesk-emu-1
+    ports:
+      - "127.0.0.1:18101:8000"
+    volumes:
+      - emu-1-config:/home/jetson/.config/neardesk
+      - emu-1-data:/home/jetson/data
+      - emu-1-workspace:/home/jetson/workspace
+
+volumes:
+  nano-config:
+  nano-data:
+  nano-workspace:
+  emu-1-config:
+  emu-1-data:
+  emu-1-workspace:

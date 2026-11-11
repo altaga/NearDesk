@@ -158,17 +158,98 @@ export async function fetchPairingStatus(): Promise<BoardPairingStatus | null> {
   }
 }
 
+export const LOCAL_EMU_TARGETS = [
+  { url: "http://127.0.0.1:18101", label: "Docker Board Emulator 01 (Port 18101)", type: "docker_emu" },
+  { url: "http://127.0.0.1:18102", label: "Docker Board Emulator 02 (Port 18102)", type: "docker_emu" },
+  { url: "http://127.0.0.1:18103", label: "Docker Board Emulator 03 (Port 18103)", type: "docker_emu" },
+  { url: "http://192.168.55.1:8800", label: "Jetson USB Gadget Link", type: "usb_gadget" },
+];
+
 export async function discoverNodes(): Promise<DiscoveredNode[]> {
+  let backendNodes: DiscoveredNode[] = [];
   try {
     const res = await fetch(`${API_BASE}/pair/discover`, { cache: "no-store" });
-    if (!res.ok) return [];
-    return await res.json();
+    if (res.ok) {
+      backendNodes = await res.json();
+    }
   } catch {
-    return [];
+    // Backend discover failed or offline
   }
+
+  // Client-side direct probing for local Docker emulators & USB links
+  if (typeof window !== "undefined") {
+    const localProbes = await Promise.all(
+      LOCAL_EMU_TARGETS.map(async (target) => {
+        const ctrl = new AbortController();
+        const timeout = setTimeout(() => ctrl.abort(), 1200);
+        try {
+          const res = await fetch(`${target.url}/v1/health`, {
+            method: "GET",
+            mode: "cors",
+            cache: "no-store",
+            signal: ctrl.signal,
+          });
+          clearTimeout(timeout);
+          if (res.ok) {
+            const data = await res.json().catch(() => ({}));
+            return {
+              label: target.label,
+              url: target.url,
+              type: target.type,
+              reachable: true,
+              detected_hardware: data.board_type || "NVIDIA Jetson Orin Nano (Emulated)",
+              status: "online",
+            } as DiscoveredNode;
+          }
+        } catch {
+          // Probe timed out or offline
+        } finally {
+          clearTimeout(timeout);
+        }
+        return null;
+      })
+    );
+
+    // Merge: Replace unreachable backend entries with reachable local probe entries
+    for (const probe of localProbes) {
+      if (!probe) continue;
+      const idx = backendNodes.findIndex((n) => n.url === probe.url);
+      if (idx >= 0) {
+        backendNodes[idx] = probe;
+      } else {
+        backendNodes.push(probe);
+      }
+    }
+  }
+
+  return backendNodes;
 }
 
 export async function claimBoard(boardId: string, ipAddress: string, nearAccount?: string): Promise<BoardPairingStatus | null> {
+  // If claiming a local emulator directly, call the emulator's endpoint
+  if (typeof window !== "undefined" && (ipAddress.includes("127.0.0.1") || ipAddress.includes("localhost"))) {
+    try {
+      const emuRes = await fetch(`${ipAddress}/v1/pair/claim`, {
+        method: "POST",
+        mode: "cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ board_id: boardId, ip_address: ipAddress, near_account: nearAccount }),
+      });
+      if (emuRes.ok) {
+        const emuData = await emuRes.json();
+        // Also inform the backend desk
+        fetch(`${API_BASE}/pair/claim`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ board_id: boardId, ip_address: ipAddress, near_account: nearAccount }),
+        }).catch(() => {});
+        return emuData;
+      }
+    } catch (e) {
+      console.warn("Direct emulator claim fallback to backend:", e);
+    }
+  }
+
   try {
     const res = await fetch(`${API_BASE}/pair/claim`, {
       method: "POST",
