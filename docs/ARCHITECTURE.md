@@ -1,3 +1,7 @@
+<p align="left">
+  <img src="../logos/logo-symbol-color-dark.png" alt="NearDesk Logo" width="64" />
+</p>
+
 # NearDesk System Architecture
 
 NearDesk is organized as a modular monorepo separating edge hardware drivers, the core operator API, and the sovereign Next.js web console.

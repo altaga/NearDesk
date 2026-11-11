@@ -1,3 +1,11 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./logos/logo-titled-color-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./logos/logo-titled-color-light.png">
+    <img src="./logos/logo-titled-color-dark.png" alt="NearDesk Logo" width="420">
+  </picture>
+</p>
+
 # NearDesk 🟢
 
 > **The Sovereign Edge AI Operator Desk for NEAR Protocol**  

@@ -1,3 +1,7 @@
+<p align="left">
+  <img src="../logos/logo-symbol-color-dark.png" alt="NearDesk Logo" width="64" />
+</p>
+
 # NearDesk API Specification
 
 All endpoints are hosted by `apps/api` on `http://localhost:8000`.
