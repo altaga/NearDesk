@@ -33,8 +33,12 @@ export default function PresentationPage() {
       {/* 1. Header / Navbar */}
       <header className="sticky top-0 z-40 w-full px-6 py-4 flex items-center justify-between border-b border-[#14171E] bg-[#07080A]/85 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded bg-[#10131A] border border-[#1E232E] flex items-center justify-center text-[#00EC97] font-bold text-xs tracking-tighter shadow-sm">
-            ND
+          <div className="w-8 h-8 rounded bg-[#10131A] border border-[#1E232E] flex items-center justify-center p-1 shadow-sm">
+            <img
+              src="/logos/logo-symbol-color-dark.png"
+              alt="NearDesk Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold tracking-tight text-[#EDEDEF]">
@@ -256,7 +260,12 @@ export default function PresentationPage() {
 
       {/* 5. Minimalist Swiss Footer */}
       <footer className="mt-auto px-6 py-6 border-t border-[#13161D] bg-[#07080A] flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-[#6B7280] font-mono">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          <img
+            src="/logos/logo-symbol-color-dark.png"
+            alt="NearDesk Logo"
+            className="w-4 h-4 object-contain opacity-85"
+          />
           <span>NearDesk Physical Edge Platform</span>
           <span>·</span>
           <span>Open-Source Hardware Operator</span>

@@ -91,6 +91,7 @@ class BoardPairingManager:
             "ip_address": ip_address,
             "connection_type": "USB-C Gadget Link (192.168.55.1)" if "192.168.55.1" in ip_address else "LAN / Direct Link",
             "near_owner": near_account,
+            "authorized_operators": [near_account],
             "paired_at": time.time(),
             "status": "ready"
         }

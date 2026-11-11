@@ -106,6 +106,7 @@ class SaveMemoryRequest(BaseModel):
 # -------------------------------------------------------------
 # System & Telemetry Routes
 # -------------------------------------------------------------
+@app.get("/health")
 @app.get("/v1/health")
 async def health():
     return {
@@ -115,6 +116,7 @@ async def health():
         "llm_mode": settings.LLM_MODE,
         "near_network": settings.NEAR_NETWORK,
         "jetson_detected": telemetry_collector.is_jetson,
+        "board_type": telemetry_collector.get_board_info().get("hardware_model"),
         "fencing": "FunctionCall Key Enforced"
     }
 
@@ -384,6 +386,7 @@ async def agent_websocket(websocket: WebSocket, board_id: str = "jetson-orin-sta
     except WebSocketDisconnect:
         board_ws_manager.unregister_board(board_id)
 
+@app.get("/setup")
 @app.get("/v1/pair/status")
 async def get_pairing_status():
     """Current hardware pairing state of the station."""
@@ -394,6 +397,7 @@ async def discover_nodes():
     """Scan USB Gadget link (192.168.55.1) and LAN for connectable Jetson hardware."""
     return await pairing_manager.discover_nodes()
 
+@app.post("/setup")
 @app.post("/v1/pair/claim")
 async def claim_board(req: ClaimBoardRequest):
     """Claim and provision a physical Jetson board with the operator's NEAR DID."""
